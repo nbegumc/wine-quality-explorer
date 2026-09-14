@@ -2,6 +2,8 @@
 
 A Python rebuild of **Applying Bayesian Networks to Wine Quality Prediction**, an R project completed during university studies. The rebuild keeps the original research question and makes the evaluation reproducible, the predictions interactive, and the limitations visible.
 
+The two models have different jobs. **Logistic regression is the prediction reference**: validation selected it, and it is what to use when all eleven measurements are known. **The Bayesian network is the reasoning model**: it answers with any subset of measurements, returns a full distribution over scores, and exposes a dependency structure whose stability can be inspected. It predicts less accurately than the reference, and the dashboard says so.
+
 ## Try the dashboard
 
 You only need Python to explore the already-trained results:
@@ -14,8 +16,8 @@ Open **http://localhost:8000**. Keep the terminal open while using the app. Stop
 
 The dashboard contains:
 
-- Quality probabilities with partially observed measurements.
-- Held-out examples whose actual quality can be compared with predictions.
+- The network’s quality distribution under partially observed measurements, with the logistic-regression reference shown beside it whenever all eleven measurements are given.
+- Held-out examples whose actual quality can be compared with both models.
 - Seven-model comparisons, confusion matrices, per-class recall, and a calibration plot.
 - A clickable Bayesian network with bootstrap arrow stability, and a record of the methodology changes.
 
@@ -34,11 +36,12 @@ Use Python 3.11 or newer. The project is managed with [uv](https://docs.astral.s
 ```bash
 uv run train.py
 uv run bootstrap_structure.py
+uv run export_reference.py
 uv run python -m unittest discover -s tests -v
 uv run serve.py
 ```
 
-`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `dist/results.json` without changing any other result. The dashboard works without that step; it simply shows no stability information.
+`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `dist/results.json` without changing any other result. `export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
 
 No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
 
@@ -52,6 +55,7 @@ python -m pip install -r requirements.txt
 python -m pip install -e .
 python train.py
 python bootstrap_structure.py
+python export_reference.py
 python -m unittest discover -s tests -v
 python serve.py
 ```
@@ -101,7 +105,9 @@ These describe **one frozen holdout**, not guaranteed performance on other wines
 | BN · BIC + original priors | 0.264 | 54.1% | 0.265 |
 | BN · AIC + original priors | 0.256 | 57.5% | 0.278 |
 
-Validation selected **logistic regression** overall and **BN · AIC without forced priors** among the networks. The explorer shows the latter because the research question concerns Bayesian networks. The comparison explicitly retains stronger alternatives.
+Validation selected **logistic regression** overall and **BN · AIC without forced priors** among the networks. Logistic regression is therefore the prediction reference, and the network is the reasoning model of the explorer. Random forest has the highest holdout accuracy but was not selected by the prespecified rule; choosing it afterwards would mean selecting on the test score.
+
+The network’s gap to the reference is structural rather than a defect: every measurement is cut into three bins before learning, and the network models the joint distribution of all twelve variables instead of the quality boundary alone. In an exploratory five-fold check on the training rows (not part of the recorded experiment), training logistic regression on the same three bins lowered its validation accuracy from 0.599 to 0.571, about half of the network’s gap; finer bins recovered accuracy but starved the rare classes. What the network offers instead is inference from partial evidence, which the reference models cannot provide without imputation.
 
 The reported accuracy intervals use 500 percentile bootstrap samples of holdout measurement groups. They are conditional on the trained model and this split. They do not include all training, model-selection, or population uncertainty. Rare-class estimates are particularly unstable. A lower mean absolute error is better; macro-F1 weights each of the six classes equally. Quality is treated as nominal during fitting, while ordinal errors are additionally reported.
 
@@ -126,10 +132,11 @@ This is an intentional first rebuild, not a line-for-line replication:
 | `src/wine_quality/model.py` | Binning, network learning, exact inference, and table export |
 | `train.py` | Grouped evaluation, selection, results, and prediction exports |
 | `bootstrap_structure.py` | Arrow stability of the selected network from bootstrap relearning |
+| `export_reference.py` | Parameters of the validation-selected prediction model for the browser |
 | `serve.py` | One-command local dashboard |
 | `dist/index.html`, `styles.css`, `app.mjs` | Interactive browser interface |
 | `dist/inference.mjs` | Exact variable elimination over exported probability tables |
-| `dist/results.json` | Metrics, splits, software versions, cut points, graph, tables, and arrow stability |
+| `dist/results.json` | Metrics, splits, software versions, cut points, graph, tables, arrow stability, and the reference model |
 | `data/winequality-red.csv` | Original attributed dataset |
 | `data/selected-network.bif` | Interoperable trained Bayesian network |
 | `data/holdout-predictions.csv` | Row-level predictions and probabilities |

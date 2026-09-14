@@ -20,7 +20,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix,
                              f1_score, log_loss, mean_absolute_error, cohen_kappa_score)
 from sklearn.model_selection import StratifiedGroupKFold
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 ROOT = Path(__file__).resolve().parent
@@ -67,6 +67,20 @@ def predict(model, frame):
     for j, label in enumerate(model.classes_):
         aligned[:, int(label) - 3] = p[:, j]
     return aligned
+
+
+def export_reference(model):
+    """Parameters of the validation-selected model, when it is the standardized logistic regression.
+
+    The browser evaluates it exactly (standardize, linear logits, softmax) as the
+    prediction reference beside the network. Other model types are not exported.
+    """
+    if not (isinstance(model, Pipeline) and isinstance(model[-1], LogisticRegression)):
+        return None
+    scaler, logistic = model[0], model[-1]
+    return {"name": "Logistic regression", "features": FEATURES, "classes": logistic.classes_.astype(int).tolist(),
+            "mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist(),
+            "coef": logistic.coef_.tolist(), "intercept": logistic.intercept_.tolist()}
 
 
 def metrics(y, probabilities):
@@ -152,6 +166,7 @@ def main():
     exported = None
     fitted_bn = None
     bn_probabilities = None
+    reference = None
     for result in results:
         fitted = fit_candidate(result["name"], train)
         probabilities = predict(fitted, test)
@@ -162,6 +177,8 @@ def main():
         result["selected_bn"] = result["name"] == bn_winner
         if result["name"] == bn_winner:
             exported, fitted_bn, bn_probabilities = fitted.export(), fitted, probabilities
+        if result["name"] == winner:
+            reference = export_reference(fitted)
         print(f"Holdout {result['name']}: accuracy={result['test']['accuracy']:.3f}, "
               f"macro-F1={result['test']['macro_f1']:.3f}", flush=True)
     # The explorer uses the very same TRAINING-ONLY model evaluated above.
@@ -199,7 +216,7 @@ def main():
                                 "validation_indices": train_idx[b].tolist()} for a, b in cv],
                   "test_class_counts": {str(q): int((test.quality == q).sum()) for q in CLASSES}},
         "selection": {"criterion": "mean five-fold validation macro-F1", "overall": winner, "bn": bn_winner},
-        "models": results, "network": exported, "ranges": ranges, "examples": examples,
+        "models": results, "network": exported, "reference_model": reference, "ranges": ranges, "examples": examples,
         "reference_queries": reference_queries,
         "versions": {"python": platform.python_version(), "numpy": np.__version__,
                      "pandas": pd.__version__, "sklearn": sklearn.__version__, "pyagrum": gum.__version__}}

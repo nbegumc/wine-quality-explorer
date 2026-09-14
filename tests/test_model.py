@@ -73,6 +73,27 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(int(matrix.sum()), self.results["split"]["test_rows"])
             self.assertAlmostEqual(float(np.trace(matrix) / matrix.sum()), model["test"]["accuracy"])
 
+    def test_reference_model_reproduces_logistic_regression(self):
+        reference = self.results.get("reference_model")
+        if reference is None:
+            self.skipTest("results.json has no reference_model block; run export_reference.py")
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        train = self.frame.iloc[self.results["split"]["train_indices"]]
+        test = self.frame.iloc[self.results["split"]["test_indices"]]
+        model = make_pipeline(StandardScaler(), LogisticRegression(C=1.0, max_iter=3000)).fit(train[FEATURES], train.quality)
+        # The browser's arithmetic: standardize, linear logits, softmax.
+        z = (test[reference["features"]].to_numpy(dtype=float) - reference["mean"]) / reference["scale"]
+        logits = z @ np.asarray(reference["coef"]).T + reference["intercept"]
+        exported = np.exp(logits - logits.max(axis=1, keepdims=True))
+        exported /= exported.sum(axis=1, keepdims=True)
+        np.testing.assert_allclose(exported, model.predict_proba(test[FEATURES]), atol=1e-9)
+        recorded = next(m for m in self.results["models"] if m["name"] == reference["name"])
+        self.assertTrue(recorded["selected_overall"])
+        predicted = np.asarray(reference["classes"])[exported.argmax(axis=1)]
+        self.assertAlmostEqual(float(np.mean(predicted == test.quality.to_numpy())), recorded["test"]["accuracy"])
+
     def assert_valid_arc_strength(self, strength):
         names = set(FEATURES) | {"quality"}
         pairs = [(p["a"], p["b"]) for p in strength["pairs"]]

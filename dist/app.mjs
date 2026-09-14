@@ -24,6 +24,17 @@ function numericEvidence(input) {
   }
   return result;
 }
+function referencePrediction() {
+  // The validation-selected prediction model needs every measurement; the network does not.
+  const ref=experiment.reference_model;
+  if(!ref||ref.features.some(n=>!(n in evidence)))return null;
+  const z=ref.features.map((n,i)=>(evidence[n]-ref.mean[i])/ref.scale[i]);
+  const logits=ref.coef.map((row,k)=>ref.intercept[k]+row.reduce((s,w,i)=>s+w*z[i],0));
+  const max=Math.max(...logits),weights=logits.map(l=>Math.exp(l-max)),norm=weights.reduce((a,b)=>a+b,0);
+  const aligned=experiment.network.classes.map(()=>0);
+  ref.classes.forEach((q,k)=>{aligned[q-3]=weights[k]/norm;});
+  return aligned;
+}
 function buildControls() {
   const primary=['alcohol','volatile_acidity','sulphates'];
   for(const name of [...primary,...experiment.network.features.filter(n=>!primary.includes(n))]) {
@@ -72,15 +83,19 @@ function updatePrediction() {
   const scale=Math.max(.05,...probabilities,...prior);
   $('#probability-chart').innerHTML=probabilities.map((p,i)=>`<div class="prob-column"><span class="prob-value">${pct(p)}</span><div class="prob-bars"><div class="prob-bar" style="height:${p/scale*100}%" title="Quality ${i+3}: ${pct(p)} with evidence"></div><div class="prob-bar baseline" style="height:${prior[i]/scale*100}%" title="Quality ${i+3}: ${pct(prior[i])} without evidence"></div></div><span class="quality-label">${i+3}</span></div>`).join('');
   $('#probability-chart').setAttribute('aria-label',probabilities.map((p,i)=>`Quality ${i+3}: ${pct(p)}`).join(', '));
-  let description=`Score ${top+3} is most likely, with model probability ${pct(probabilities[top])}. `;
-  description+=count?'Unknown measurements are integrated out using the learned network.':'This is the model’s marginal distribution before observing any measurements.';
-  if(currentSample)description+=` This example’s actual score is ${currentSample.quality}.`;
+  let description=`The network puts ${pct(probabilities[top])} on score ${top+3}, its most likely value. `;
+  description+=count===experiment.network.features.length?'Every measurement is observed, so nothing is integrated out.':count?'Unknown measurements are integrated out using the learned network.':'This is the network’s marginal distribution before observing any measurements.';
+  if(currentSample)description+=` This wine’s actual score is ${currentSample.quality}.`;
   $('#prediction-description').textContent=description;
+  const ref=experiment.reference_model,reference=referencePrediction();
+  if(!ref)$('#reference-line').hidden=true;
+  else if(reference){const best=reference.indexOf(Math.max(...reference));$('#reference-line').innerHTML=`<strong>Prediction reference (${ref.name.toLowerCase()}):</strong> score ${best+3} most likely at ${pct(reference[best])}, 7 or 8 at ${pct(reference[4]+reference[5])}. All 11 measurements are known, so the reference applies.`;}
+  else $('#reference-line').innerHTML=`<strong>Prediction reference (${ref.name.toLowerCase()}):</strong> needs all 11 measurements. With ${count} of 11, only the network can answer.`;
 }
 function renderModelTable() {
   const split=$('#metric-split').value;
   $('#model-table tbody').innerHTML=experiment.models.map(model=>{
-    const m=model[split],tag=model.selected_overall?'Validation choice':model.selected_bn?'Explorer network':'';
+    const m=model[split],tag=model.selected_overall?'Prediction reference':model.selected_bn?'Reasoning model':'';
     return `<tr class="${model.selected_bn?'selected-row':''}"><td>${model.name}${tag?`<span class="table-tag">${tag}</span>`:''}</td><td>${pct(m.accuracy)}</td><td>${m.macro_f1.toFixed(3)}</td><td>${pct(m.macro_recall)}</td><td>${m.mae.toFixed(3)}</td><td>${m.log_loss.toFixed(3)}</td></tr>`;
   }).join('');
 }
@@ -141,7 +156,7 @@ function registerAgentTools() {
   if(!document.modelContext?.registerTool)return;
   const controller=new AbortController();
   window.addEventListener('pagehide',()=>controller.abort(),{once:true});
-  const tool={name:'set_wine_measurements',title:'Set wine measurements',description:'Replace the visible wine measurements and return the updated quality probabilities. Omitted or null measurements are treated as unknown.',inputSchema:{type:'object',properties:{measurements:{type:'object',properties:Object.fromEntries(experiment.network.features.map(n=>[n,{type:['number','null']}])) ,additionalProperties:false}},required:['measurements'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||Object.keys(input).some(k=>k!=='measurements'))throw new Error('Expected measurements only.');const validated=numericEvidence(input.measurements);evidence=validated;currentSample=null;$('#sample').value='';showView('predict');updatePrediction();return{measurements:{...evidence},quality_probabilities:Object.fromEntries(probabilities.map((p,i)=>[String(i+3),p])),model:experiment.selection.bn};}};
+  const tool={name:'set_wine_measurements',title:'Set wine measurements',description:'Replace the visible wine measurements and return the network’s updated quality probabilities, plus the prediction reference when all measurements are given. Omitted or null measurements are treated as unknown.',inputSchema:{type:'object',properties:{measurements:{type:'object',properties:Object.fromEntries(experiment.network.features.map(n=>[n,{type:['number','null']}])) ,additionalProperties:false}},required:['measurements'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||Object.keys(input).some(k=>k!=='measurements'))throw new Error('Expected measurements only.');const validated=numericEvidence(input.measurements);evidence=validated;currentSample=null;$('#sample').value='';showView('predict');updatePrediction();const reference=referencePrediction();return{measurements:{...evidence},quality_probabilities:Object.fromEntries(probabilities.map((p,i)=>[String(i+3),p])),model:experiment.selection.bn,reference_model:experiment.reference_model?.name??null,reference_probabilities:reference?Object.fromEntries(reference.map((p,i)=>[String(i+3),p])):null};}};
   try{Promise.resolve(document.modelContext.registerTool(tool,{signal:controller.signal})).catch(()=>{});}catch{}
 }
 async function start() {
@@ -153,9 +168,12 @@ async function start() {
     experiment=await response.json();const selected=experiment.models.find(m=>m.selected_bn);inspectedModel=selected.name;
     prior=query(experiment.network,{});evidence=Object.fromEntries(['alcohol','volatile_acidity','sulphates'].map(n=>[n,experiment.ranges[n].median]));
     $('#dataset-summary').innerHTML=`<strong>${experiment.dataset.rows.toLocaleString()}</strong> wines<br>${experiment.split.train_rows.toLocaleString()} training · ${experiment.split.test_rows} held out`;
-    $('#model-name').textContent=selected.name;$('#holdout-accuracy').textContent=`${pct(selected.test.accuracy)} accuracy`;
-    $('#accuracy-interval').textContent=`95% group-bootstrap interval: ${pct(selected.accuracy_interval[0])}–${pct(selected.accuracy_interval[1])}`;
-    $('#selection-note').textContent=`Validation selected ${experiment.selection.overall} overall and ${experiment.selection.bn} among Bayesian networks. These choices were frozen before evaluating the holdout; the best test score did not choose the explorer model.`;
+    $('#model-name').textContent=selected.name;
+    $('#accuracy-interval').textContent=`${pct(selected.test.accuracy)} on ${experiment.split.test_rows} unseen wines (95% interval ${pct(selected.accuracy_interval[0])}–${pct(selected.accuracy_interval[1])}). Answers with any subset of measurements.`;
+    const reference=experiment.models.find(m=>m.selected_overall);
+    $('#reference-name').textContent=reference.name;
+    $('#reference-accuracy').textContent=`${pct(reference.test.accuracy)} on the same wines, selected by validation macro-F1. Needs all 11 measurements.`;
+    $('#selection-note').textContent=`Validation macro-F1 selected ${experiment.selection.overall} as the prediction reference and ${experiment.selection.bn} as the reasoning network, before the holdout was evaluated. The network is kept for what it can do with partial evidence, not for its score.`;
     buildControls();updatePrediction();renderModelTable();
     for(const model of experiment.models){const option=document.createElement('option');option.value=model.name;option.textContent=model.name;option.selected=model.name===inspectedModel;$('#inspect-model').append(option);}
     $('#inspect-model').addEventListener('change',event=>{inspectedModel=event.target.value;renderModelDetail();});
