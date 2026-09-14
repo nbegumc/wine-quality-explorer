@@ -4,11 +4,11 @@ A beginner guide to the Python project and interactive explorer
 
 This project asks whether laboratory measurements of a red wine can help predict its sensory quality score. It also asks a more useful question than simply naming a score: how should our uncertainty change when we know some measurements and leave others unknown?
 
-We rebuilt an earlier university project written in R using Python. The rebuild keeps the research question, corrects problems in the evaluation, compares the network with simpler models, and makes both the network's reasoning and the reference model's predictions explorable in a browser. The aim is a project whose reasoning you can explain and whose results someone else can reproduce.
+We rebuilt an earlier university project written in R using Python. The rebuild keeps the research question, corrects problems in the evaluation, compares the network with simpler models, and makes the predictions explorable in a browser. The aim is a project whose reasoning you can explain and whose results someone else can reproduce.
 
 You need no background in probability or Bayesian networks to use this guide. Start with the counting examples, then follow the actual experiment. By the end, you should be able to explain what the model learns, read its probability bars, describe a fair test, and discuss the project's limitations without relying on technical vocabulary.
 
-**The main result.** The selected Bayesian network correctly predicts 181 of 320 held-out scores, or 56.6%, and misses all held-out wines with scores 3, 4, and 8. Logistic regression wins the project's model-selection criterion and predicts more accurately, at 60.0%. The explorer therefore gives the two models different jobs: logistic regression is the **prediction reference**, used when all eleven measurements are known, and the network is the **reasoning model**, used to answer with any subset of measurements and to show how beliefs shift. These findings are part of the project, including the disappointing ones.
+**The main result.** The selected Bayesian network correctly predicts 181 of 320 held-out scores, or 56.6%. It is useful for learning about uncertain predictions, but it misses all held-out wines with scores 3, 4, and 8. Logistic regression wins the project's model-selection criterion. These findings are part of the project, including the disappointing ones.
 
 ### How to read the guide
 
@@ -20,7 +20,7 @@ You need no background in probability or Bayesian networks to use this guide. St
 
 The examples marked **Teaching example** use invented numbers. Tables marked **Recorded experiment** come from the included Python results. This distinction matters: an easy example can teach a calculation without being evidence about wine.
 
-Guide edition September 2026, second edition, written for the explorer that pairs the network with a prediction reference. The first edition is kept as `docs/BEGINNER_GUIDE_old.md`. Companion to Wine Quality Explorer. No model was retrained for this document.
+Guide edition September 2026. Companion to Wine Quality Explorer. No model was retrained for this document.
 
 ## 1 Understand the prediction task and the data
 
@@ -216,7 +216,7 @@ Both of these alternatives receive the original continuous measurements. Their c
 
 All seven configurations use the same outer holdout and inner folds. Their settings are fixed in advance. We select by mean validation macro-F1, rather than searching for whichever model happens to have the highest final test accuracy.
 
-The dashboard keeps the Bayesian network as its reasoning model because exploring conditional probabilities is the project's research topic, and it shows the validation-selected logistic regression as the prediction reference whenever all eleven measurements are known. Keeping the stronger alternative visible makes the conclusion more credible: the network's inference with partial evidence is valuable even though it does not win the prediction comparison.
+The dashboard centers a Bayesian network because exploring conditional probabilities is the project's research topic. It also reports the overall selected model. Keeping a stronger alternative visible makes the portfolio's conclusion more credible: the network's educational and inference capabilities are valuable even when it does not win the prediction comparison.
 
 ## 10 Read the metrics without being misled
 
@@ -256,8 +256,6 @@ A **calibration plot** groups predictions by their largest probability and compa
 
 Logistic regression wins the prespecified validation criterion overall. AIC without forced arrows wins among the networks. The forest's higher holdout accuracy does not change those selections: it is a different metric on data reserved for evaluation. Choosing a new winner after seeing this table would change the experiment's decision rule.
 
-**Two roles in the explorer.** Because of this table, the explorer presents logistic regression as the prediction reference and the AIC network as the reasoning model. The network's gap is structural rather than a defect. Every measurement is cut into three bins before learning, and the network fits the joint distribution of all twelve variables instead of the quality boundary alone. In an exploratory five-fold check on the training rows, which is not part of the recorded experiment, training logistic regression on the same three bins lowered its validation accuracy from 0.599 to 0.571, about half of the network's gap. Finer bins recovered some accuracy but starved the rare classes. What the network offers instead is inference from partial evidence, which the reference model cannot provide without inventing values for the missing measurements.
-
 The selected network makes 181 exact matches out of 320. Its mean absolute score error is 0.484 points, and 95.3% of predictions are within one point. That last figure sounds strong partly because most scores are near the middle of the scale. It cannot replace class-specific results.
 
 The selected network identifies none of the actual score-3, score-4, or score-8 wines in the holdout. Those classes contain only 2, 11, and 4 holdout observations respectively. It identifies 87 of 136 score-5 wines, 78 of 127 score-6 wines, and 16 of 40 score-7 wines. Rare-class performance remains a central weakness.
@@ -285,7 +283,7 @@ Use the held-out sample whose actual quality is 3, source row index 459. Its alc
 
 Knowing alcohol alone raises the probability of score 5 from about 42.5% to 67.2%. Adding all measurements lowers it to 63.6% and gives score 4 more probability. Evidence does not have to keep pushing the answer in one direction.
 
-With all measurements, the most likely score is 5. The true score is 3, so the model makes a two-point error and assigns very little probability to the truth. The prediction reference also chooses score 5 for this wine, with 80.2% probability, so both models miss; the explorer shows that comparison under the chart whenever all eleven measurements are known. This is a useful example precisely because it fails. It demonstrates why a tall probability bar is not a guarantee and why rare-class evaluation matters.
+With all measurements, the most likely score is 5. The true score is 3, so the model makes a two-point error and assigns very little probability to the truth. This is a useful example precisely because it fails. It demonstrates why a tall probability bar is not a guarantee and why rare-class evaluation matters.
 
 The **expected score** multiplies each possible score by its probability and adds the products. For this full-evidence prediction it is about 4.88. The most likely score remains 5. An expected score can lie between categories; the model has not created a new recorded quality label of 4.88.
 
@@ -299,19 +297,17 @@ Open the hosted Wine Quality Explorer or run the included local server described
 
 ### Start with the probability bars
 
-1. Open **Ask the network** and select **Clear all**. Read the probabilities before any measurement is known. Notice that several scores remain plausible.
+1. Open **Predict a wine** and select **Clear all**. Read the probabilities before any measurement is known. Notice that several scores remain plausible.
 2. Include alcohol alone. Move it within one displayed category, then across a category boundary. The probabilities should stay fixed within a bin and may change at a boundary.
 3. Include sulphates and volatile acidity. Ask which scores gained probability and which lost it. Do not assume that adding evidence must make the tallest bar taller.
 4. Uncheck a measurement. You are now asking the model to average over that unknown quantity, not asking about a wine with zero of it.
-5. Choose the held-out quality-3 sample used in Chapter 12. The picker supplies all eleven measurements. Compare the actual score with the most likely and expected scores, and with the prediction reference shown under the chart.
+5. Choose the held-out quality-3 sample used in Chapter 12. The picker supplies all eleven measurements. Compare the actual score with the most likely and expected scores.
 
 The darker probability bars represent your supplied evidence. The muted bars show the distribution without measurements. Their comparison answers how the fitted model's beliefs changed for this query.
 
-Under the chart, the **prediction reference** line reports what logistic regression predicts once all eleven measurements are known. With fewer measurements it says so: the reference cannot answer a partial query, and that is exactly the question the network exists to answer. The dark panel below names both roles with their held-out accuracy.
-
 ### Inspect the evaluation and graph
 
-In **Compare models**, switch between training cross-validation and the final holdout. Identify which numbers were used to choose the models; the tags mark logistic regression as the prediction reference and the AIC network as the reasoning model. Inspect the chosen network's confusion matrix and explain why its overall accuracy does not describe its ability to find score-8 wines.
+In **Compare models**, switch between training cross-validation and the final holdout. Identify which numbers were used to choose the models. Inspect the chosen network's confusion matrix and explain why its overall accuracy does not describe its ability to find score-8 wines.
 
 In **Explore the network**, select quality and read its parents and children. The arrows show the fitted dependency structure. Selecting a node is an explanation tool; it does not alter the model. Use Chapter 4 to explain how measurements can inform quality even when arrows point outward from quality.
 
@@ -324,8 +320,6 @@ In **Data and methodology**, compare the class counts and read the experiment se
 **Exercise.** Why can 9.8% and 10.7% alcohol give the same prediction when other inputs are unchanged? **Answer.** Both are medium in the selected model. Binning has discarded the difference.
 
 **Exercise.** Does moving an alcohol slider show the effect of physically adding alcohol? **Answer.** It changes the information conditioned on by an observational model. It does not simulate a validated chemical intervention.
-
-**Exercise.** Why does the explorer show logistic regression's prediction only when all eleven measurements are known? **Answer.** Logistic regression needs a value for every input and has no rule for an unknown measurement. The network sums over the unknown measurements, which is why it can answer partial queries even though it predicts less accurately with complete ones.
 
 **Exercise.** In **Explore the network**, select quality. Which of its arrows is least stable, and what does a direction share near 50% mean? **Answer.** The arrow to total sulfur dioxide appears in the fewest resamples. A share near 50% means the resamples learned each direction about equally often: the data support a dependency between the two variables but do not determine which way the arrow points.
 
@@ -340,15 +334,14 @@ The project separates training from exploration. This makes the delivered result
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
 | `train.py` | Creates the grouped splits, compares models, selects them, and exports results |
 | `bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
-| `export_reference.py` | Exports the validation-selected prediction model so the browser can show it beside the network |
-| `dist/results.json` | Records scores, row indices, cut points, graph, tables, arrow stability, the reference model, and software versions |
+| `dist/results.json` | Records scores, row indices, cut points, graph, tables, and software versions |
 | `data/holdout-predictions.csv` | Lets you inspect each held-out prediction and its probabilities |
 | `dist/inference.mjs` and `dist/app.mjs` | Calculate browser probabilities and update the interface |
 | `tests/` | Checks evaluation boundaries and consistency of the implementation |
 
 To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
 
-To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py` followed by `python bootstrap_structure.py` for the arrow stability shown in the network view and `python export_reference.py` for the prediction reference. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
+To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py` followed by `python bootstrap_structure.py` for the arrow stability shown in the network view. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
 
 The training script overwrites the result exports with its new run. Preserve the current results before experimenting if you want to compare versions. A recorded data checksum helps detect whether the source CSV changed.
 
@@ -402,14 +395,12 @@ A credible portfolio can present the original project, explain the audit, docume
 | Baseline | A reference method used to judge whether added complexity helps |
 | Calibration | Agreement between stated probability and observed frequency |
 | Bootstrap | Resampling observed units with replacement to study variation |
-| Prediction reference | The validation-selected model used to predict when every measurement is known; here logistic regression |
-| Reasoning model | The Bayesian network, used to answer with partial evidence and to inspect learned dependencies |
 
 **Three distinctions to remember.** Training changes the model; inference asks a question of it. A prediction estimates an outcome; a causal claim describes the result of intervening. A passing software test checks specified behavior; a fair statistical evaluation estimates performance under stated sampling conditions.
 
 ## 17 Find the evidence and read further
 
-The numerical source for this guide is the recorded Python experiment in `dist/results.json`. The Word edition of this guide is generated from its Markdown source by `build_guide.py`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
+The numerical source for this guide is the recorded Python experiment in `dist/results.json`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
 
 The explanatory examples with 100 wines are invented for teaching. The six-class result table and source-row-459 example are actual project outputs. The guide's figures show a teaching graph and the experiment's sequence, not a causal model of wine production.
 
@@ -423,6 +414,6 @@ The explanatory examples with 100 wines are invented for teaching. The six-class
 
 ### A short way to explain the project aloud
 
-"I studied whether laboratory measurements can predict red-wine quality, while showing uncertainty over possible scores. I rebuilt my R study in Python and corrected leakage by learning all preprocessing and model structure within training data. I compared Bayesian networks with simple baselines, selected models through validation, and evaluated the frozen choices on grouped held-out data. Logistic regression performed better on the chosen predictive criterion, so the explorer shows it as the prediction reference, while the network is kept as the reasoning model because it supports queries with missing measurements. Rare quality scores remain difficult for both."
+"I studied whether laboratory measurements can predict red-wine quality, while showing uncertainty over possible scores. I rebuilt my R study in Python and corrected leakage by learning all preprocessing and model structure within training data. I compared Bayesian networks with simple baselines, selected models through validation, and evaluated the frozen choices on grouped held-out data. The network supports interactive queries with missing measurements, but simpler models performed better on the chosen predictive criterion and rare quality scores remain difficult."
 
 Use that explanation only once you can connect each sentence to the code or results. To prepare, explain the 100-wine example without formulas, trace the split before any fitting, and walk someone through the failed prediction in Chapter 12. Those three activities reveal whether you understand the probability, evaluation, and limitations behind the interface.
