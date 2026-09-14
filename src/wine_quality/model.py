@@ -161,3 +161,50 @@ class WineBN:
                 "cuts": self.bins.cuts, "factors": factors, "arcs": arcs,
                 "score": self.score, "knowledge": self.knowledge,
                 "forced_arcs": ORIGINAL_PRIORS if self.knowledge else []}
+
+
+def bootstrap_arc_strength(frame, groups, score="bic", knowledge=False, repeats=1000, seed=123):
+    """Relearn the structure on group-bootstrap resamples of a training frame.
+
+    For every pair of variables connected in at least one resample, report how
+    often an arc appeared in either direction (``strength``) and how often it
+    pointed from the alphabetically first name to the second (``direction``).
+    This is a stability diagnostic of the learning recipe; it fits no model
+    that is used for prediction.
+    """
+    validate_frame(frame)
+    groups = np.asarray(groups)
+    if len(groups) != len(frame):
+        raise ValueError("groups must align with the rows of frame.")
+    if repeats < 1:
+        raise ValueError("repeats must be at least 1.")
+    gum.setNumberOfThreads(1)
+    gum.initRandom(seed)
+    rng = np.random.default_rng(seed)
+    unique = np.unique(groups)
+    indices = {g: np.flatnonzero(groups == g) for g in unique}
+    counts = {}
+    skipped = 0
+    for repeat in range(repeats):
+        sampled = np.concatenate([indices[g] for g in rng.choice(unique, len(unique))])
+        try:
+            fitted = WineBN.fit(frame.iloc[sampled], score, knowledge)
+        except ValueError:
+            # A resample can leave a feature without three distinct bins.
+            skipped += 1
+            continue
+        for a, b in fitted.network.arcs():
+            names = (fitted.network.variable(a).name(), fitted.network.variable(b).name())
+            key = tuple(sorted(names))
+            both, forward = counts.get(key, (0, 0))
+            counts[key] = (both + 1, forward + int(names == key))
+        if (repeat + 1) % 100 == 0:
+            print(f"Bootstrap {repeat + 1}/{repeats}", flush=True)
+    completed = repeats - skipped
+    if not completed:
+        raise ValueError("No bootstrap resample could be fitted.")
+    pairs = [{"a": a, "b": b, "strength": both / completed, "direction": forward / both}
+             for (a, b), (both, forward) in sorted(counts.items())]
+    return {"repeats": repeats, "skipped": skipped, "seed": seed,
+            "resampling": "training measurement groups with replacement",
+            "recipe": {"score": score, "knowledge": knowledge}, "pairs": pairs}

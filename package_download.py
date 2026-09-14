@@ -9,7 +9,7 @@ if __name__ == "__main__":
     target = ROOT / "dist/wine-quality-python.zip"
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         entries = ["README.md", "pyproject.toml", "uv.lock", ".python-version", "requirements.txt",
-                   "serve.py", "train.py", "package_download.py",
+                   "serve.py", "train.py", "bootstrap_structure.py", "package_download.py",
                    ".gitignore", "src", "tests", "docs", "data", "original", "dist"]
         paths = []
         for entry in entries:

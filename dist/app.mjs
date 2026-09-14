@@ -6,6 +6,7 @@ const units = {alcohol:'% vol',density:'g/cm³',pH:'',free_sulfur_dioxide:'mg/L'
 const steps = {alcohol:0.1,density:0.00001,pH:0.01,free_sulfur_dioxide:0.5,total_sulfur_dioxide:0.5,fixed_acidity:0.1,volatile_acidity:0.005,citric_acid:0.01,residual_sugar:0.05,chlorides:0.001,sulphates:0.01};
 const descriptions = {quality:'The sensory score assigned to the wine. The model predicts a probability for each score from 3 to 8.',alcohol:'Alcohol concentration. The model can associate this measurement with quality and other wine properties.',volatile_acidity:'Volatile acidity measured in the wine. Its association with quality is learned from the training observations.',sulphates:'Measured sulphate concentration. This is distinct from the free and total sulfur dioxide measurements.',pH:'The acidity scale. pH and fixed acidity describe different properties.',density:'Mass per unit volume, associated with the composition of the wine.'};
 const fmt = n => Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
+const STABLE=0.85,WEAK=0.5; // Arrow-stability buckets; 0.85 is the original R project's averaging threshold.
 const pct = n => `${(n*100).toFixed(1)}%`;
 let experiment, evidence={}, prior=[], probabilities=[], inspectedModel, currentSample=null, node='quality';
 
@@ -96,12 +97,17 @@ function renderNetwork() {
   const positions={quality:[525,75],alcohol:[200,235],sulphates:[525,235],volatile_acidity:[850,235],residual_sugar:[175,425],density:[525,425],citric_acid:[875,425],chlorides:[175,615],pH:[410,615],fixed_acidity:[650,615],total_sulfur_dioxide:[890,615],free_sulfur_dioxide:[850,735]};
   const neighbours=new Set([node,...network.arcs.filter(([a,b])=>a===node||b===node).flat()]);
   const force=new Set(network.forced_arcs.map(a=>a.join('|')));
+  // Bootstrap arc strength is optional: a bare train.py run exports no arc_strength block.
+  const stability=network.arc_strength,strengths=new Map((stability?.pairs??[]).map(p=>[`${p.a}|${p.b}`,p]));
+  const strengthOf=(a,b)=>{if(!stability)return null;const p=strengths.get([a,b].sort().join('|'));return p?{strength:p.strength,agree:a<b?p.direction:1-p.direction}:{strength:0,agree:0};};
+  const bucket=s=>s>=STABLE?'stable':s>=WEAK?'moderate':'weak',pct0=n=>`${Math.round(n*100)}%`;
   const edges=network.arcs.map(([a,b])=>{
     const [x1,y1]=positions[a],[x2,y2]=positions[b],dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),pad=dy===0?95:35;
     const sx=x1+dx/len*pad,sy=y1+dy/len*pad,ex=x2-dx/len*pad,ey=y2-dy/len*pad;
     const curve=Math.abs(dx)<25?35:Math.abs(dy)<25?40:0;
-    const forced=force.has(`${a}|${b}`),active=a===node||b===node;
-    return `<path d="M ${sx} ${sy} Q ${(sx+ex)/2+curve} ${(sy+ey)/2-curve} ${ex} ${ey}" class="edge ${forced?'forced':''} ${active?'':'dimmed'}" marker-end="url(#${forced?'arrow-wine':'arrow'})"><title>${featureLabel(a)} → ${featureLabel(b)}${forced?' (prior assumption)':''}</title></path>`;
+    const forced=force.has(`${a}|${b}`),active=a===node||b===node,info=strengthOf(a,b);
+    const detail=info?` · in ${pct0(info.strength)} of ${stability.repeats.toLocaleString()} bootstrap graphs · ${pct0(info.agree)} in this direction`:'';
+    return `<path d="M ${sx} ${sy} Q ${(sx+ex)/2+curve} ${(sy+ey)/2-curve} ${ex} ${ey}" class="edge ${forced?'forced':''} ${info?bucket(info.strength):''} ${active?'':'dimmed'}" marker-end="url(#${forced?'arrow-wine':'arrow'})"><title>${featureLabel(a)} → ${featureLabel(b)}${forced?' (prior assumption)':''}${detail}</title></path>`;
   }).join('');
   const nodes=[...network.features,'quality'].map(name=>{
     const [x,y]=positions[name],words=featureLabel(name),wide=words.length>18?200:words.length>13?170:145;
@@ -109,13 +115,21 @@ function renderNetwork() {
   }).join('');
   $('#network-svg').setAttribute('viewBox','0 0 1050 790');
   $('#network-svg').innerHTML=`<defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7" fill="#9aa9ba"/></marker><marker id="arrow-wine" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7" fill="#752350"/></marker></defs>${edges}${nodes}`;
-  $('#network-summary').textContent=`12 variables · ${network.arcs.length} arrows`;
+  const stable=stability?network.arcs.filter(([a,b])=>strengthOf(a,b).strength>=STABLE).length:null;
+  $('#network-summary').textContent=`12 variables · ${network.arcs.length} arrows${stability?` · ${stable} stable`:''}`;
   document.querySelectorAll('[data-node]').forEach(el=>{el.addEventListener('click',()=>selectNode(el.dataset.node));el.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectNode(el.dataset.node);}});});
   $('#selected-node').textContent=featureLabel(node);$('#node-description').textContent=descriptions[node]||'A laboratory measurement included in the learned joint probability model.';
   for(const [selector,names] of [['#node-parents',network.arcs.filter(([,b])=>b===node).map(([a])=>a)],['#node-children',network.arcs.filter(([a])=>a===node).map(([,b])=>b)]]) {
-    $(selector).innerHTML=names.length?names.map(n=>`<button class="node-chip" data-pick="${n}">${featureLabel(n)}</button>`).join(''):'<span class="micro">None in this network</span>';
+    $(selector).innerHTML=names.length?names.map(n=>{const info=strengthOf(n,node);return `<button class="node-chip" data-pick="${n}">${featureLabel(n)}${info?` · ${pct0(info.strength)}`:''}</button>`;}).join(''):'<span class="micro">None in this network</span>';
   }
   document.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>selectNode(el.dataset.pick)));
+  const drawn=new Set(network.arcs.map(a=>a.join('|')));
+  const absent=(stability?.pairs??[]).filter(p=>p.strength>=WEAK&&!drawn.has(`${p.a}|${p.b}`)&&!drawn.has(`${p.b}|${p.a}`));
+  $('#absent-heading').hidden=$('#absent-pairs').hidden=!absent.length;
+  $('#absent-pairs').innerHTML=absent.map(p=>`<span>${featureLabel(p.a)} – ${featureLabel(p.b)} · ${pct0(p.strength)}</span>`).join('');
+  document.querySelectorAll('.stability-legend').forEach(el=>el.hidden=!stability);
+  $('#stability-note').hidden=!stability;
+  if(stability)$('#stability-note').textContent=`Arrow stability: the ${experiment.selection.bn} recipe was relearned on ${stability.repeats.toLocaleString()} resamples of the training wines (measurement groups drawn with replacement). Solid arrows appeared in at least ${pct0(STABLE)} of those graphs, the threshold the original R project used to keep an arrow; dotted arrows appeared in fewer than half. A direction share near 50% in a tooltip means the data does not determine which way the arrow points. This is a diagnostic of the frozen model; predictions are unchanged.`;
 }
 function showView(name) {
   if(!['predict','compare','network','study'].includes(name))name='predict';

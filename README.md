@@ -17,7 +17,7 @@ The dashboard contains:
 - Quality probabilities with partially observed measurements.
 - Held-out examples whose actual quality can be compared with predictions.
 - Seven-model comparisons, confusion matrices, per-class recall, and a calibration plot.
-- A clickable Bayesian network and a record of the methodology changes.
+- A clickable Bayesian network with bootstrap arrow stability, and a record of the methodology changes.
 
 The interface evaluates conditional probabilities from exported Python-trained tables directly in the browser. It does not run training again when a control changes. All model data is included. Optional web fonts have system-font fallbacks.
 
@@ -33,9 +33,12 @@ Use Python 3.11 or newer. The project is managed with [uv](https://docs.astral.s
 
 ```bash
 uv run train.py
+uv run bootstrap_structure.py
 uv run python -m unittest discover -s tests -v
 uv run serve.py
 ```
+
+`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `dist/results.json` without changing any other result. The dashboard works without that step; it simply shows no stability information.
 
 No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
 
@@ -48,6 +51,7 @@ source .venv/bin/activate        # macOS/Linux
 python -m pip install -r requirements.txt
 python -m pip install -e .
 python train.py
+python bootstrap_structure.py
 python -m unittest discover -s tests -v
 python serve.py
 ```
@@ -112,7 +116,7 @@ This is an intentional first rebuild, not a line-for-line replication:
 - Maximum indegree is fixed at three; exact inference replaces prediction from parents alone.
 - The AIC/BIC evaluation bug is corrected.
 - Cross-validation repeats the complete learning process.
-- Graph bootstrap averaging from the original is not yet reproduced. The accuracy interval bootstrap is a different operation and must not be presented as structure averaging.
+- The original's graph bootstrap is reproduced only as a diagnostic: `bootstrap_structure.py` relearns the selected recipe on 1,000 resamples of training measurement groups and records how often each arrow appears and in which direction. The original instead kept arrows found in at least 85% of resamples as its model; no averaged network is used for prediction here. The accuracy interval bootstrap is a different operation and must not be presented as structure averaging.
 - The original prior edges are a comparison condition only. Their chemical or causal directions are not verified by this project.
 
 ## Project map
@@ -121,10 +125,11 @@ This is an intentional first rebuild, not a line-for-line replication:
 | --- | --- |
 | `src/wine_quality/model.py` | Binning, network learning, exact inference, and table export |
 | `train.py` | Grouped evaluation, selection, results, and prediction exports |
+| `bootstrap_structure.py` | Arrow stability of the selected network from bootstrap relearning |
 | `serve.py` | One-command local dashboard |
 | `dist/index.html`, `styles.css`, `app.mjs` | Interactive browser interface |
 | `dist/inference.mjs` | Exact variable elimination over exported probability tables |
-| `dist/results.json` | Metrics, splits, software versions, cut points, graph, and tables |
+| `dist/results.json` | Metrics, splits, software versions, cut points, graph, tables, and arrow stability |
 | `data/winequality-red.csv` | Original attributed dataset |
 | `data/selected-network.bif` | Interoperable trained Bayesian network |
 | `data/holdout-predictions.csv` | Row-level predictions and probabilities |

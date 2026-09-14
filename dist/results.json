@@ -10672,7 +10672,415 @@
     ],
     "score": "aic",
     "knowledge": false,
-    "forced_arcs": []
+    "forced_arcs": [],
+    "arc_strength": {
+      "repeats": 1000,
+      "skipped": 0,
+      "seed": 123,
+      "resampling": "training measurement groups with replacement",
+      "recipe": {
+        "score": "aic",
+        "knowledge": false
+      },
+      "pairs": [
+        {
+          "a": "alcohol",
+          "b": "chlorides",
+          "strength": 0.356,
+          "direction": 0.9578651685393258
+        },
+        {
+          "a": "alcohol",
+          "b": "citric_acid",
+          "strength": 0.417,
+          "direction": 0.5443645083932853
+        },
+        {
+          "a": "alcohol",
+          "b": "density",
+          "strength": 1.0,
+          "direction": 0.957
+        },
+        {
+          "a": "alcohol",
+          "b": "fixed_acidity",
+          "strength": 0.569,
+          "direction": 0.7363796133567663
+        },
+        {
+          "a": "alcohol",
+          "b": "free_sulfur_dioxide",
+          "strength": 0.382,
+          "direction": 0.40575916230366493
+        },
+        {
+          "a": "alcohol",
+          "b": "pH",
+          "strength": 0.651,
+          "direction": 0.44086021505376344
+        },
+        {
+          "a": "alcohol",
+          "b": "quality",
+          "strength": 1.0,
+          "direction": 0.415
+        },
+        {
+          "a": "alcohol",
+          "b": "residual_sugar",
+          "strength": 0.79,
+          "direction": 0.5746835443037974
+        },
+        {
+          "a": "alcohol",
+          "b": "sulphates",
+          "strength": 0.227,
+          "direction": 0.6475770925110133
+        },
+        {
+          "a": "alcohol",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.409,
+          "direction": 0.6332518337408313
+        },
+        {
+          "a": "alcohol",
+          "b": "volatile_acidity",
+          "strength": 0.173,
+          "direction": 0.6184971098265896
+        },
+        {
+          "a": "chlorides",
+          "b": "citric_acid",
+          "strength": 0.122,
+          "direction": 0.16393442622950818
+        },
+        {
+          "a": "chlorides",
+          "b": "density",
+          "strength": 0.963,
+          "direction": 0.013499480789200415
+        },
+        {
+          "a": "chlorides",
+          "b": "fixed_acidity",
+          "strength": 0.135,
+          "direction": 0.2962962962962963
+        },
+        {
+          "a": "chlorides",
+          "b": "free_sulfur_dioxide",
+          "strength": 0.096,
+          "direction": 0.19791666666666666
+        },
+        {
+          "a": "chlorides",
+          "b": "pH",
+          "strength": 0.406,
+          "direction": 0.12807881773399016
+        },
+        {
+          "a": "chlorides",
+          "b": "quality",
+          "strength": 0.252,
+          "direction": 0.15873015873015872
+        },
+        {
+          "a": "chlorides",
+          "b": "residual_sugar",
+          "strength": 0.127,
+          "direction": 0.25196850393700787
+        },
+        {
+          "a": "chlorides",
+          "b": "sulphates",
+          "strength": 0.312,
+          "direction": 0.5608974358974359
+        },
+        {
+          "a": "chlorides",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.414,
+          "direction": 0.12318840579710146
+        },
+        {
+          "a": "chlorides",
+          "b": "volatile_acidity",
+          "strength": 0.304,
+          "direction": 0.29276315789473684
+        },
+        {
+          "a": "citric_acid",
+          "b": "density",
+          "strength": 0.017,
+          "direction": 0.058823529411764705
+        },
+        {
+          "a": "citric_acid",
+          "b": "fixed_acidity",
+          "strength": 1.0,
+          "direction": 0.405
+        },
+        {
+          "a": "citric_acid",
+          "b": "free_sulfur_dioxide",
+          "strength": 0.312,
+          "direction": 0.5224358974358975
+        },
+        {
+          "a": "citric_acid",
+          "b": "pH",
+          "strength": 0.558,
+          "direction": 0.482078853046595
+        },
+        {
+          "a": "citric_acid",
+          "b": "quality",
+          "strength": 0.172,
+          "direction": 0.8430232558139535
+        },
+        {
+          "a": "citric_acid",
+          "b": "residual_sugar",
+          "strength": 0.337,
+          "direction": 0.24629080118694363
+        },
+        {
+          "a": "citric_acid",
+          "b": "sulphates",
+          "strength": 0.659,
+          "direction": 0.6282245827010622
+        },
+        {
+          "a": "citric_acid",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.951,
+          "direction": 0.38590956887486855
+        },
+        {
+          "a": "citric_acid",
+          "b": "volatile_acidity",
+          "strength": 1.0,
+          "direction": 0.724
+        },
+        {
+          "a": "density",
+          "b": "fixed_acidity",
+          "strength": 1.0,
+          "direction": 0.111
+        },
+        {
+          "a": "density",
+          "b": "free_sulfur_dioxide",
+          "strength": 0.299,
+          "direction": 0.9498327759197325
+        },
+        {
+          "a": "density",
+          "b": "pH",
+          "strength": 0.062,
+          "direction": 0.6774193548387096
+        },
+        {
+          "a": "density",
+          "b": "quality",
+          "strength": 0.027,
+          "direction": 0.8518518518518519
+        },
+        {
+          "a": "density",
+          "b": "residual_sugar",
+          "strength": 1.0,
+          "direction": 0.106
+        },
+        {
+          "a": "density",
+          "b": "sulphates",
+          "strength": 0.451,
+          "direction": 0.8425720620842572
+        },
+        {
+          "a": "density",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.145,
+          "direction": 0.9448275862068966
+        },
+        {
+          "a": "density",
+          "b": "volatile_acidity",
+          "strength": 0.378,
+          "direction": 0.9682539682539683
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "free_sulfur_dioxide",
+          "strength": 0.346,
+          "direction": 0.3988439306358382
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "pH",
+          "strength": 1.0,
+          "direction": 0.631
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "quality",
+          "strength": 0.172,
+          "direction": 0.6744186046511628
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "residual_sugar",
+          "strength": 0.766,
+          "direction": 0.5248041775456919
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "sulphates",
+          "strength": 0.079,
+          "direction": 0.4810126582278481
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.382,
+          "direction": 0.2486910994764398
+        },
+        {
+          "a": "fixed_acidity",
+          "b": "volatile_acidity",
+          "strength": 0.376,
+          "direction": 0.5531914893617021
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "pH",
+          "strength": 0.364,
+          "direction": 0.45604395604395603
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "quality",
+          "strength": 0.322,
+          "direction": 0.7360248447204969
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "residual_sugar",
+          "strength": 0.437,
+          "direction": 0.5743707093821511
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "sulphates",
+          "strength": 0.186,
+          "direction": 0.6451612903225806
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "total_sulfur_dioxide",
+          "strength": 1.0,
+          "direction": 0.533
+        },
+        {
+          "a": "free_sulfur_dioxide",
+          "b": "volatile_acidity",
+          "strength": 0.385,
+          "direction": 0.3948051948051948
+        },
+        {
+          "a": "pH",
+          "b": "quality",
+          "strength": 0.32,
+          "direction": 0.55
+        },
+        {
+          "a": "pH",
+          "b": "residual_sugar",
+          "strength": 0.259,
+          "direction": 0.5752895752895753
+        },
+        {
+          "a": "pH",
+          "b": "sulphates",
+          "strength": 0.288,
+          "direction": 0.78125
+        },
+        {
+          "a": "pH",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.465,
+          "direction": 0.33763440860215055
+        },
+        {
+          "a": "pH",
+          "b": "volatile_acidity",
+          "strength": 0.315,
+          "direction": 0.7015873015873015
+        },
+        {
+          "a": "quality",
+          "b": "residual_sugar",
+          "strength": 0.374,
+          "direction": 0.3181818181818182
+        },
+        {
+          "a": "quality",
+          "b": "sulphates",
+          "strength": 0.999,
+          "direction": 0.8218218218218218
+        },
+        {
+          "a": "quality",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.718,
+          "direction": 0.4331476323119777
+        },
+        {
+          "a": "quality",
+          "b": "volatile_acidity",
+          "strength": 0.951,
+          "direction": 0.4889589905362776
+        },
+        {
+          "a": "residual_sugar",
+          "b": "sulphates",
+          "strength": 0.204,
+          "direction": 0.6323529411764706
+        },
+        {
+          "a": "residual_sugar",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.609,
+          "direction": 0.4745484400656814
+        },
+        {
+          "a": "residual_sugar",
+          "b": "volatile_acidity",
+          "strength": 0.211,
+          "direction": 0.6018957345971564
+        },
+        {
+          "a": "sulphates",
+          "b": "total_sulfur_dioxide",
+          "strength": 0.253,
+          "direction": 0.3952569169960474
+        },
+        {
+          "a": "sulphates",
+          "b": "volatile_acidity",
+          "strength": 0.228,
+          "direction": 0.4517543859649123
+        },
+        {
+          "a": "total_sulfur_dioxide",
+          "b": "volatile_acidity",
+          "strength": 0.328,
+          "direction": 0.6554878048780488
+        }
+      ]
+    }
   },
   "ranges": {
     "fixed_acidity": {

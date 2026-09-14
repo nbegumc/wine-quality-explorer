@@ -264,7 +264,7 @@ The selected network identifies none of the actual score-3, score-4, or score-8 
 
 We resample the holdout measurement groups with replacement 500 times and recalculate accuracy. "With replacement" means a sampled group can appear more than once. The middle 95% of these bootstrap scores runs from approximately 49.6% to 62.7% for the selected network.
 
-This interval reflects holdout sampling variation conditional on this trained model and split. It does not include every uncertainty from retraining, model selection, or a different wine population. It is also not graph bootstrap averaging: no arrows are relearned in this calculation. The small validation gaps between models do not establish a universal ranking.
+This interval reflects holdout sampling variation conditional on this trained model and split. It does not include every uncertainty from retraining, model selection, or a different wine population. It is also not the arrow-stability bootstrap described in Chapter 13: no arrows are relearned in this calculation. The small validation gaps between models do not establish a universal ranking.
 
 ## 12 Trace one real prediction from evidence to result
 
@@ -311,6 +311,8 @@ In **Compare models**, switch between training cross-validation and the final ho
 
 In **Explore the network**, select quality and read its parents and children. The arrows show the fitted dependency structure. Selecting a node is an explanation tool; it does not alter the model. Use Chapter 4 to explain how measurements can inform quality even when arrows point outward from quality.
 
+The arrows are also drawn by stability. The selected recipe was relearned on 1,000 resamples of the training wines, drawing measurement groups with replacement. Hover over an arrow to read how often it appeared in those graphs and how often it pointed the drawn way. Solid arrows appeared in at least 85% of the resamples, the threshold the original R project used to keep an arrow; dotted arrows appeared in fewer than half. This is a diagnostic of the frozen model. It changes no prediction, and it cannot make an arrow causal.
+
 In **Data and methodology**, compare the class counts and read the experiment sequence. Use this view when explaining the project to someone else: start with the question and the split before discussing the graph's appearance.
 
 ### Practice and check your explanation
@@ -318,6 +320,8 @@ In **Data and methodology**, compare the class counts and read the experiment se
 **Exercise.** Why can 9.8% and 10.7% alcohol give the same prediction when other inputs are unchanged? **Answer.** Both are medium in the selected model. Binning has discarded the difference.
 
 **Exercise.** Does moving an alcohol slider show the effect of physically adding alcohol? **Answer.** It changes the information conditioned on by an observational model. It does not simulate a validated chemical intervention.
+
+**Exercise.** In **Explore the network**, select quality. Which of its arrows is least stable, and what does a direction share near 50% mean? **Answer.** The arrow to total sulfur dioxide appears in the fewest resamples. A share near 50% means the resamples learned each direction about equally often: the data support a dependency between the two variables but do not determine which way the arrow points.
 
 ## 14 Connect the learning steps to the Python files
 
@@ -329,6 +333,7 @@ The project separates training from exploration. This makes the delivered result
 | `QuantileBins` in `src/wine_quality/model.py` | Learns training boundaries and applies them to measurements |
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
 | `train.py` | Creates the grouped splits, compares models, selects them, and exports results |
+| `bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
 | `dist/results.json` | Records scores, row indices, cut points, graph, tables, and software versions |
 | `data/holdout-predictions.csv` | Lets you inspect each held-out prediction and its probabilities |
 | `dist/inference.mjs` and `dist/app.mjs` | Calculate browser probabilities and update the interface |
@@ -336,7 +341,7 @@ The project separates training from exploration. This makes the delivered result
 
 To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
 
-To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py`. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
+To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py` followed by `python bootstrap_structure.py` for the arrow stability shown in the network view. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
 
 The training script overwrites the result exports with its new run. Preserve the current results before experimenting if you want to compare versions. A recorded data checksum helps detect whether the source CSV changed.
 
@@ -350,7 +355,7 @@ The original script discretized the whole dataset and initially learned graphs b
 
 The original AIC prediction block also used the BIC fitted object. That copy-and-paste error means an AIC label did not guarantee an AIC result. A shared evaluation loop now ties each result to its named model configuration. The detailed R audit is retained in `docs/LEARNING_GUIDE.md`.
 
-Other changes are deliberate methodological choices. Quantile bins replace Hartemink; pyAgrum hill climbing replaces the original comparison of Grow-Shrink, hill climbing, and MMHC; exact inference uses all supplied evidence. The original graph bootstrap averaging has not been reproduced. The holdout-accuracy bootstrap serves a different purpose. New scores therefore should not be advertised as a like-for-like performance improvement over the R numbers.
+Other changes are deliberate methodological choices. Quantile bins replace Hartemink; pyAgrum hill climbing replaces the original comparison of Grow-Shrink, hill climbing, and MMHC; exact inference uses all supplied evidence. The original graph bootstrap is reproduced only as the arrow-stability diagnostic in Chapter 13; no averaged network is used for prediction. The holdout-accuracy bootstrap serves a different purpose. New scores therefore should not be advertised as a like-for-like performance improvement over the R numbers.
 
 ### What remains unresolved
 
@@ -360,7 +365,7 @@ Rare extreme scores have too few examples for dependable evaluation. Duplicate g
 
 ### Sensible next experiments
 
-Choose one question at a time: does an ordinal model improve score-distance errors; does a faithful Hartemink rebuild change the result; or are the learned arrows stable across resampled training sets? Write the comparison and success metric before running it. Once repeated improvements use this holdout as feedback, it becomes development data; use new independent data or an appropriate nested evaluation for a fresh final estimate.
+Choose one question at a time: does an ordinal model improve score-distance errors; does a faithful Hartemink rebuild change the result; or does keeping only the arrows that proved stable under resampling (Chapter 13) change the predictions? Write the comparison and success metric before running it. Once repeated improvements use this holdout as feedback, it becomes development data; use new independent data or an appropriate nested evaluation for a fresh final estimate.
 
 A credible portfolio can present the original project, explain the audit, document the rebuild, and discuss the evidence honestly. The most useful interview skill is being able to justify a decision and recognize where its conclusion stops.
 

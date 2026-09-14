@@ -10,7 +10,8 @@ import pyagrum as gum
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from wine_quality.model import FEATURES, QuantileBins, WineBN, validate_frame
+from wine_quality.model import (FEATURES, QuantileBins, WineBN, bootstrap_arc_strength,
+                                validate_frame)
 
 
 class ModelTests(unittest.TestCase):
@@ -71,6 +72,35 @@ class ModelTests(unittest.TestCase):
             matrix = np.asarray(model["test"]["confusion"])
             self.assertEqual(int(matrix.sum()), self.results["split"]["test_rows"])
             self.assertAlmostEqual(float(np.trace(matrix) / matrix.sum()), model["test"]["accuracy"])
+
+    def assert_valid_arc_strength(self, strength):
+        names = set(FEATURES) | {"quality"}
+        pairs = [(p["a"], p["b"]) for p in strength["pairs"]]
+        self.assertEqual(len(pairs), len(set(pairs)))
+        self.assertGreaterEqual(strength["skipped"], 0)
+        for pair in strength["pairs"]:
+            self.assertLess(pair["a"], pair["b"])
+            self.assertTrue({pair["a"], pair["b"]} <= names)
+            self.assertTrue(0 < pair["strength"] <= 1)
+            self.assertTrue(0 <= pair["direction"] <= 1)
+
+    def test_bootstrap_arc_strength_is_valid_and_deterministic(self):
+        train = self.frame.iloc[self.results["split"]["train_indices"]]
+        groups = pd.util.hash_pandas_object(train[FEATURES], index=False).to_numpy()
+        first = bootstrap_arc_strength(train, groups, "aic", False, repeats=3, seed=7)
+        self.assertEqual(first["repeats"], 3)
+        self.assertEqual(first["recipe"], {"score": "aic", "knowledge": False})
+        self.assert_valid_arc_strength(first)
+        self.assertEqual(first, bootstrap_arc_strength(train, groups, "aic", False, repeats=3, seed=7))
+
+    def test_exported_arc_strength_matches_selected_recipe(self):
+        strength = self.results["network"].get("arc_strength")
+        if strength is None:
+            self.skipTest("results.json has no arc_strength block; run bootstrap_structure.py")
+        self.assertGreater(strength["repeats"], 0)
+        self.assertEqual(strength["recipe"], {"score": self.results["network"]["score"],
+                                              "knowledge": self.results["network"]["knowledge"]})
+        self.assert_valid_arc_strength(strength)
 
 
 if __name__ == "__main__":
