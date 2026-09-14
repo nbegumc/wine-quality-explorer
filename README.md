@@ -29,34 +29,32 @@ Download the same guide as a [PDF](dist/wine-quality-learning-guide.pdf) or an [
 
 ## Reproduce the experiment
 
-Use Python 3.11 or newer. Create an isolated environment and install dependencies:
+Use Python 3.11 or newer. The project is managed with [uv](https://docs.astral.sh/uv/), which creates the environment, installs the locked dependencies, and fetches the right Python itself:
+
+```bash
+uv run train.py
+uv run python -m unittest discover -s tests -v
+uv run serve.py
+```
+
+No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
+
+Without uv, create an environment and install the exported pins instead:
 
 ```bash
 python -m venv .venv
-```
-
-Activate it on Windows:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Or on macOS/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Then run:
-
-```bash
+.venv\Scripts\Activate.ps1      # Windows
+source .venv/bin/activate        # macOS/Linux
 python -m pip install -r requirements.txt
+python -m pip install -e .
 python train.py
 python -m unittest discover -s tests -v
 python serve.py
 ```
 
-The exact versions actually used are also recorded in `dist/results.json`. All direct modelling dependencies are pinned. This is not a complete transitive lockfile; platform-specific dependencies may differ.
+`requirements.txt` is generated from the lockfile with `uv export --no-hashes --no-emit-project -o requirements.txt`; edit `pyproject.toml` and re-export rather than editing it by hand. The exact versions actually used for the published results are also recorded in `dist/results.json`.
+
+The [project setup notes](docs/project_setup.md) record how the environment is managed, the commands for changing dependencies, and a known sensitivity in model selection.
 
 If Node.js is available, independently check the browser's exact-inference implementation:
 
