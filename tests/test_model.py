@@ -1,0 +1,77 @@
+"""Scientific regression tests, runnable with the standard-library test runner."""
+import json
+import sys
+import unittest
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pyagrum as gum
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from wine_quality.model import FEATURES, QuantileBins, WineBN, validate_frame
+
+
+class ModelTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.results = json.loads((ROOT / "dist/results.json").read_text())
+        cls.frame = pd.read_csv(ROOT / "data/winequality-red.csv", sep=";")
+        cls.frame.columns = [c.replace(" ", "_") for c in cls.frame.columns]
+        cls.model = WineBN(QuantileBins(cls.results["network"]["cuts"]),
+                          gum.loadBN(str(ROOT / "data/selected-network.bif")),
+                          cls.results["network"]["score"], cls.results["network"]["knowledge"])
+
+    def test_no_group_overlap_in_holdout_or_folds(self):
+        groups = pd.util.hash_pandas_object(self.frame[FEATURES], index=False)
+        pairs = [(self.results["split"]["train_indices"], self.results["split"]["test_indices"])]
+        pairs += [(f["train_indices"], f["validation_indices"]) for f in self.results["split"]["cv_folds"]]
+        for a, b in pairs:
+            self.assertFalse(set(groups.iloc[a]) & set(groups.iloc[b]))
+        a, b = pairs[0]
+        self.assertEqual(set(a) | set(b), set(range(len(self.frame))))
+
+    def test_cutpoints_are_training_only(self):
+        train = self.frame.iloc[self.results["split"]["train_indices"]]
+        fitted = QuantileBins.fit(train)
+        self.assertEqual(fitted.cuts, self.results["network"]["cuts"])
+        # Changing held-out inputs must not change the fitted transformation.
+        adversarial = self.frame.copy()
+        adversarial.loc[self.results["split"]["test_indices"], FEATURES] = 99999
+        self.assertEqual(QuantileBins.fit(adversarial.iloc[self.results["split"]["train_indices"]]).cuts,
+                         fitted.cuts)
+
+    def test_boundary_and_invalid_evidence(self):
+        for name, cuts in self.model.bins.cuts.items():
+            self.assertEqual(self.model.bins.evidence({name: cuts[0]})[name], "medium")
+            self.assertEqual(self.model.bins.evidence({name: cuts[1]})[name], "high")
+        with self.assertRaises(ValueError):
+            self.model.query({"quality": 7})
+        with self.assertRaises(ValueError):
+            self.model.query({"alcohol": float("nan")})
+
+    def test_exported_factors_normalize(self):
+        for factor in self.results["network"]["factors"]:
+            table = np.asarray(factor["values"]).reshape(factor["sizes"])
+            np.testing.assert_allclose(table.sum(axis=0), 1, atol=1e-12)
+            self.assertTrue((table > 0).all())
+
+    def test_predictions_match_saved_training_model(self):
+        # BIF serialization rounds slightly; compare to the exact JSON export.
+        for case in self.results["reference_queries"]:
+            np.testing.assert_allclose(self.model.query(case["evidence"]),
+                                       case["probabilities"], atol=2e-6)
+
+    def test_selection_uses_cv_and_matrix_has_all_rows(self):
+        models = self.results["models"]
+        self.assertEqual(max(models, key=lambda m: m["cv"]["macro_f1"])["name"],
+                         self.results["selection"]["overall"])
+        for model in models:
+            matrix = np.asarray(model["test"]["confusion"])
+            self.assertEqual(int(matrix.sum()), self.results["split"]["test_rows"])
+            self.assertAlmostEqual(float(np.trace(matrix) / matrix.sum()), model["test"]["accuracy"])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,8 @@
+.python-deps/
+.venv/
+__pycache__/
+*.pyc
+.sites-runtime/
+.pytest_cache/
+/tmp*
+/.wine-training-*/
