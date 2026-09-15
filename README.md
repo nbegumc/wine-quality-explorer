@@ -178,4 +178,4 @@ The dataset represents Portuguese red Vinho Verde wines. No general claim about 
 
 The original university project remains the historical reference. The Python rebuild was developed with AI assistance; the learning guide and tests are provided so its decisions and calculations can be inspected and understood.
 
-No new software license is selected on the author's behalf. The dataset's license is separate from the repository's code licensing.
+The code in this repository is released under the [MIT License](LICENSE). The dataset's CC BY 4.0 license is separate and applies to `data/winequality-red.csv`.
