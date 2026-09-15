@@ -75,21 +75,31 @@ copy in `site-packages`.
 
 ## Reproducibility finding
 
-`uv run train.py` was executed end to end against the new environment. It did **not** reproduce the
-committed artifacts. The explorer's selected Bayesian network changed from `BN · AIC` to
-`BN · BIC + original priors`, and log-loss values drifted at the thirteenth decimal place.
+The committed artifacts are reproduced exactly by the Docker image (`Dockerfile`, `compose.yaml`)
+when it runs as **linux/amd64**: every metric, the selected models, the exported network, and the
+holdout predictions match, with floating-point noise below 1e-15 in pyAgrum's inference outputs
+between runs. `tests/compare_results.py` checks a regenerated `app/results.json` against the
+committed one at a relative tolerance of 1e-9, and the `reproduce` job in
+`.github/workflows/ci.yml` performs that check on every push.
 
-The cause is not the migration. Those two candidates score 0.259 and 0.264 mean five-fold validation
-macro-F1 — close enough that a different scipy or BLAS build reorders them. The published results
-were produced under Python 3.12.14; the current lock resolves 3.12.12 with newer transitive builds.
+The same locked dependencies on **arm64** (Apple silicon natively, or an arm64 container) do
+**not** reproduce the network results. Logistic regression and the random forest match exactly,
+but pyAgrum's greedy hill climbing breaks near-ties differently: `BN · AIC` scores 0.259 instead of
+0.267 mean validation macro-F1, `BN · BIC` 0.247 instead of 0.256, and the selected network flips
+to `BN · BIC + original priors` (0.264). An earlier native run on this Mac showed the same flip and
+was first attributed to Python patch versions; the architecture is the actual cause, which is why
+`compose.yaml` pins `platform: linux/amd64` (Docker Desktop on Apple silicon emulates it).
 
-`app/results.json`, `data/holdout-predictions.csv`, and `data/selected-network.bif` were restored
-from git, so the published artifacts and the tests that check them are unchanged.
+Consequences:
 
-To make the reproducibility claim hold exactly, pin `.python-version` to `3.12.14`, run `uv sync`,
-and regenerate the artifacts once with `uv run train.py` so they match the locked environment. Until
-that is done, treat the BN selection as sensitive to the numerical environment rather than as a
-stable result.
+- The reference environment for every published number is the pinned image
+  `ghcr.io/astral-sh/uv:0.9.30-python3.12-bookworm-slim` on amd64 (Python 3.12.12).
+- Regenerate artifacts only with `docker compose run --rm experiment`, then run the tests.
+  A native `uv run train.py` on Apple silicon produces a different, internally consistent
+  experiment; do not commit its outputs without updating the README and guides.
+- The near-tie itself is real: the four network recipes span 0.256–0.267 validation macro-F1
+  while the fold-to-fold spread within one recipe is 0.013–0.034. The dashboard's arrow-stability
+  view quantifies the same fragility from the bootstrap side.
 
 ## Migration notes
 

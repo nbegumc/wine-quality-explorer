@@ -1,0 +1,22 @@
+# Both services run as linux/amd64. pyAgrum's structure search breaks near-ties differently on
+# arm64 (Apple silicon, natively or in an arm64 container): the BN · AIC validation score drops
+# from 0.267 to 0.259 and the selected network flips to BN · BIC + original priors. The committed
+# artifacts are reproduced exactly on amd64; on Apple silicon Docker Desktop emulates it.
+services:
+  dashboard:
+    build: .
+    platform: linux/amd64
+    ports:
+      - "8000:8000"
+
+  # Rerun the recorded experiment inside the container and write the artifacts
+  # (app/results.json, data/selected-network.bif, data/holdout-predictions.csv)
+  # into this checkout. Compare with `git diff --stat`.
+  experiment:
+    build: .
+    platform: linux/amd64
+    profiles: [experiment]
+    volumes:
+      - .:/project
+    command: >
+      sh -c "uv run train.py && uv run bootstrap_structure.py && uv run export_reference.py"

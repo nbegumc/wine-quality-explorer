@@ -6,7 +6,7 @@ The following checks passed for the delivered experiment:
 - Browser inference matched Python exact inference on 41 saved queries to absolute tolerance 1e-10. Cases include all unknown measurements, partial evidence, all measurements, and both cut points of every feature.
 - JavaScript syntax and local static asset references were checked.
 
-The numerical experiment was run using Python 3.12.14, NumPy 2.3.5, pandas 2.2.3, scikit-learn 1.8.0, and pyAgrum 3.1.1. The data checksum and all row indices are saved in `app/results.json`.
+The numerical experiment was run using Python 3.12.12, NumPy 2.3.5, pandas 2.2.3, scikit-learn 1.8.0, and pyAgrum 3.1.1 on linux/amd64 in the pinned Docker image; see `docs/project_setup.md` for the architecture sensitivity of the network results. The data checksum and all row indices are saved in `app/results.json`.
 
 Full browser-based visual and end-to-end interaction testing was not performed. The optional WebMCP measurement-setting tool is feature-detected; a supported live WebMCP validation context was not available. The standard visible controls do not depend on WebMCP support.
 

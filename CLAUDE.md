@@ -13,6 +13,9 @@ uv run python -m unittest tests.test_model.ModelTests.test_cutpoints_are_trainin
 node tests/test_inference.mjs                           # browser-inference parity vs Python (41 saved queries, tol 1e-10)
 uv run serve.py                                         # dashboard at http://localhost:8000 (serves app/ statically)
 uv run package_download.py                              # builds app/wine-quality-python.zip
+docker compose up                                       # dashboard from the pinned amd64 image
+docker compose run --rm experiment                      # regenerate artifacts in the reference environment
+uv run --with python-docx --with reportlab build_guide.py   # guide PDF/DOCX from docs/BEGINNER_GUIDE.md
 ```
 
 Dependency changes: edit via `uv add <pkg>==<ver>`, then regenerate the pip fallback with `uv export --no-hashes --no-emit-project -o requirements.txt`. Never hand-edit `requirements.txt`.
@@ -37,7 +40,7 @@ Two halves connected by one JSON contract (`app/results.json`):
 ## Things to know before changing anything
 
 - `tests/test_model.py` is a regression suite against the **committed artifacts** (`app/results.json`, `data/selected-network.bif`). It reconstructs the model from those files and checks split integrity, train-only cut points, and prediction parity. Running `train.py` overwrites those artifacts; if outputs change, tests may still pass but the README results table and docs go stale.
-- Model selection is numerically fragile: `BN · AIC` vs `BN · BIC + original priors` differ by ~0.005 macro-F1, so a different scipy/BLAS build can flip the exported network. See `docs/project_setup.md` ("Reproducibility finding") before treating a changed `results.json` as a bug or as a valid regeneration. Published artifacts were produced under Python 3.12.14.
+- Model selection is numerically fragile: `BN · AIC` vs `BN · BIC + original priors` differ by ~0.005 macro-F1, and pyAgrum's hill climbing breaks the tie differently on arm64, so a native run on Apple silicon flips the exported network. The reference environment is the amd64 Docker image; regenerate artifacts only with `docker compose run --rm experiment` and compare with `python tests/compare_results.py app/results.json <regenerated>`. See `docs/project_setup.md` ("Reproducibility finding").
 - The methodology is deliberately prespecified. Do not tune anything against holdout scores, change `SEED`, alter the candidate list, or move selection after holdout evaluation — the README and `docs/LEARNING_GUIDE.md` document these as corrections to the original R project in `original/`.
 - `ORIGINAL_PRIORS` arcs are an experimental comparison condition only, not verified causal claims; keep that framing in any docs or UI text.
 - `WineBN.fit` writes a temporary CSV under `Path.cwd()` (prefix `.wine-training-`, gitignored) because pyAgrum's `BNLearner` needs a file path.

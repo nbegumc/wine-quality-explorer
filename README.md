@@ -1,5 +1,9 @@
 # Wine Quality Explorer
 
+[![CI](https://github.com/nbegumc/wine-quality-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/nbegumc/wine-quality-explorer/actions/workflows/ci.yml)
+
+**Live dashboard:** https://nbegumc.github.io/wine-quality-explorer/
+
 A Python rebuild of **Applying Bayesian Networks to Wine Quality Prediction**, an R project completed during university studies. The rebuild keeps the original research question and makes the evaluation reproducible, the predictions interactive, and the limitations visible.
 
 The two models have different jobs. **Logistic regression is the prediction reference**: validation selected it, and it is what to use when all eleven measurements are known. **The Bayesian network is the reasoning model**: it answers with any subset of measurements, returns a full distribution over scores, and exposes a dependency structure whose stability can be inspected. It predicts less accurately than the reference, and the dashboard says so.
@@ -13,6 +17,14 @@ python serve.py
 ```
 
 Open **http://localhost:8000**. Keep the terminal open while using the app. Stop it with Ctrl+C. No account, API key, or GitHub connection is required.
+
+With Docker instead of a local Python:
+
+```bash
+docker compose up
+```
+
+The same address serves the dashboard from the project's pinned image. The hosted copy at the top of this page is deployed from `main` by GitHub Actions.
 
 The dashboard contains:
 
@@ -43,6 +55,15 @@ uv run serve.py
 
 After editing `docs/BEGINNER_GUIDE.md`, regenerate its PDF and Word editions with `uv run --with python-docx --with reportlab build_guide.py`; the two libraries are fetched for that run only and are not project dependencies.
 
+To reproduce the published numbers exactly, run the experiment in the reference environment, the pinned `linux/amd64` Docker image:
+
+```bash
+docker compose run --rm experiment
+uv run python tests/compare_results.py app/results.json <(git show HEAD:app/results.json)
+```
+
+The container rewrites `app/results.json`, `data/selected-network.bif`, and `data/holdout-predictions.csv` in the checkout; the comparison confirms every field matches the committed file (floats within 1e-9). CI performs the same check on every push. A native run on Apple silicon does **not** reproduce the network results: pyAgrum's structure search breaks near-ties differently on arm64 and selects a different network. `docs/project_setup.md` records the finding.
+
 `train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `app/results.json` without changing any other result. `export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
 
 No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
@@ -72,7 +93,7 @@ If Node.js is available, independently check the browser's exact-inference imple
 node tests/test_inference.mjs
 ```
 
-This compares 41 browser queries with Python inference, including no evidence, partial evidence, all measurements, and every numerical bin boundary.
+This compares 41 browser queries with Python inference, including no evidence, partial evidence, all measurements, and every numerical bin boundary. CI runs it on every push, together with the Python tests and the container reproduction check.
 
 ## What the experiment actually does
 
@@ -136,7 +157,10 @@ This is an intentional first rebuild, not a line-for-line replication:
 | `bootstrap_structure.py` | Arrow stability of the selected network from bootstrap relearning |
 | `export_reference.py` | Parameters of the validation-selected prediction model for the browser |
 | `build_guide.py`, `docs/guide-template.docx` | Generate the guide's PDF and Word editions from `docs/BEGINNER_GUIDE.md` |
-| `serve.py` | One-command local dashboard |
+| `serve.py` | One-command local dashboard (`HOST`/`PORT` from the environment) |
+| `Dockerfile`, `compose.yaml` | Pinned amd64 reference environment: `dashboard` and `experiment` services |
+| `.github/workflows/ci.yml` | Tests, browser parity, container reproduction check, Pages deployment |
+| `tests/compare_results.py` | Field-by-field comparison of a regenerated `results.json` with the committed one |
 | `app/index.html`, `styles.css`, `app.mjs` | Interactive browser interface |
 | `app/inference.mjs` | Exact variable elimination over exported probability tables |
 | `app/results.json` | Metrics, splits, software versions, cut points, graph, tables, arrow stability, and the reference model |
