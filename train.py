@@ -220,9 +220,7 @@ def main():
         "reference_queries": reference_queries,
         "versions": {"python": platform.python_version(), "numpy": np.__version__,
                      "pandas": pd.__version__, "sklearn": sklearn.__version__, "pyagrum": gum.__version__}}
-    write_json(ROOT / "dist" / "results.json", payload)
-    write_json(ROOT / "dist" / "data.json", {"columns": FEATURES + ["quality"],
-                "rows": frame.to_numpy().tolist()})
+    write_json(ROOT / "app" / "results.json", payload)
     gum.saveBN(fitted_bn.network, str(ROOT / "data" / "selected-network.bif"))
     predictions = test.copy()
     predictions.insert(0, "source_row", predictions.index)

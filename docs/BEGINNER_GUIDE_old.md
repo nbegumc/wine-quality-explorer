@@ -242,7 +242,7 @@ A **calibration plot** groups predictions by their largest probability and compa
 
 ## 11 Interpret the recorded results
 
-**Recorded experiment.** The table shows average training-validation macro-F1 and performance on the frozen 320-row holdout. Values are rounded for reading; the full values are saved in `dist/results.json`.
+**Recorded experiment.** The table shows average training-validation macro-F1 and performance on the frozen 320-row holdout. Values are rounded for reading; the full values are saved in `app/results.json`.
 
 | Model | Validation macro F1 | Holdout accuracy | Holdout macro F1 |
 | --- | ---: | ---: | ---: |
@@ -334,9 +334,9 @@ The project separates training from exploration. This makes the delivered result
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
 | `train.py` | Creates the grouped splits, compares models, selects them, and exports results |
 | `bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
-| `dist/results.json` | Records scores, row indices, cut points, graph, tables, and software versions |
+| `app/results.json` | Records scores, row indices, cut points, graph, tables, and software versions |
 | `data/holdout-predictions.csv` | Lets you inspect each held-out prediction and its probabilities |
-| `dist/inference.mjs` and `dist/app.mjs` | Calculate browser probabilities and update the interface |
+| `app/inference.mjs` and `app/app.mjs` | Calculate browser probabilities and update the interface |
 | `tests/` | Checks evaluation boundaries and consistency of the implementation |
 
 To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
@@ -400,7 +400,7 @@ A credible portfolio can present the original project, explain the audit, docume
 
 ## 17 Find the evidence and read further
 
-The numerical source for this guide is the recorded Python experiment in `dist/results.json`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
+The numerical source for this guide is the recorded Python experiment in `app/results.json`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
 
 The explanatory examples with 100 wines are invented for teaching. The six-class result table and source-row-459 example are actual project outputs. The guide's figures show a teaching graph and the experiment's sequence, not a causal model of wine production.
 

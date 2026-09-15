@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {query, discretize} from '../dist/inference.mjs';
-const experiment=JSON.parse(readFileSync(new URL('../dist/results.json',import.meta.url)));
+import {query, discretize} from '../app/inference.mjs';
+const experiment=JSON.parse(readFileSync(new URL('../app/results.json',import.meta.url)));
 let checked=0;
 for(const {evidence,probabilities} of experiment.reference_queries) {
   const actual=query(experiment.network,evidence);

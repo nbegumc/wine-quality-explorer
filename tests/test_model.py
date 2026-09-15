@@ -17,7 +17,7 @@ from wine_quality.model import (FEATURES, QuantileBins, WineBN, bootstrap_arc_st
 class ModelTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.results = json.loads((ROOT / "dist/results.json").read_text())
+        cls.results = json.loads((ROOT / "app/results.json").read_text())
         cls.frame = pd.read_csv(ROOT / "data/winequality-red.csv", sep=";")
         cls.frame.columns = [c.replace(" ", "_") for c in cls.frame.columns]
         cls.model = WineBN(QuantileBins(cls.results["network"]["cuts"]),

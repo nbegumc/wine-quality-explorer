@@ -2,7 +2,7 @@
 
 Usage: python bootstrap_structure.py [--repeats N]
 Relearns the selected recipe on resamples of the recorded training partition and
-adds ``network.arc_strength`` to dist/results.json. Nothing else in that file,
+adds ``network.arc_strength`` to app/results.json. Nothing else in that file,
 the selected model, or the holdout evaluation changes.
 """
 import argparse
@@ -29,7 +29,7 @@ def main():
     parser.add_argument("--repeats", type=int, default=1000,
                         help="number of bootstrap resamples (default 1000)")
     args = parser.parse_args()
-    path = ROOT / "dist" / "results.json"
+    path = ROOT / "app" / "results.json"
     results = json.loads(path.read_text(encoding="utf-8"))
     network, split = results["network"], results["split"]
     frame = pd.read_csv(ROOT / "data" / "winequality-red.csv", sep=";")

@@ -27,7 +27,7 @@ The interface evaluates conditional probabilities from exported Python-trained t
 
 The [beginner learning guide](docs/BEGINNER_GUIDE.md) explains the objective, probability and Bayes' rule using small counting examples, network structure and tables, every experiment step, the actual results, and a real failed prediction. It includes dashboard exercises, a code map, a glossary, and references. No probability background is assumed.
 
-Download the same guide as a [PDF](dist/wine-quality-learning-guide.pdf) or an [editable Word document](dist/wine-quality-learning-guide.docx). Both are generated from the Markdown by `build_guide.py` and are linked from the dashboard. This is the second edition, written for the explorer that pairs the network with a prediction reference; the first edition is kept as [`docs/BEGINNER_GUIDE_old.md`](docs/BEGINNER_GUIDE_old.md) with its own [PDF](dist/wine-quality-learning-guide_old.pdf) and [Word](dist/wine-quality-learning-guide_old.docx) files. The shorter [R audit and implementation notes](docs/LEARNING_GUIDE.md) remain available for the specific corrections to the original project.
+Download the same guide as a [PDF](app/wine-quality-learning-guide.pdf) or an [editable Word document](app/wine-quality-learning-guide.docx). Both are generated from the Markdown by `build_guide.py` and are linked from the dashboard. This is the second edition, written for the explorer that pairs the network with a prediction reference; the first edition is kept as [`docs/BEGINNER_GUIDE_old.md`](docs/BEGINNER_GUIDE_old.md) with its own [PDF](app/wine-quality-learning-guide_old.pdf) and [Word](app/wine-quality-learning-guide_old.docx) files. The shorter [R audit and implementation notes](docs/LEARNING_GUIDE.md) remain available for the specific corrections to the original project.
 
 ## Reproduce the experiment
 
@@ -43,7 +43,7 @@ uv run serve.py
 
 After editing `docs/BEGINNER_GUIDE.md`, regenerate its PDF and Word editions with `uv run --with python-docx --with reportlab build_guide.py`; the two libraries are fetched for that run only and are not project dependencies.
 
-`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `dist/results.json` without changing any other result. `export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
+`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `app/results.json` without changing any other result. `export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
 
 No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
 
@@ -62,7 +62,7 @@ python -m unittest discover -s tests -v
 python serve.py
 ```
 
-`requirements.txt` is generated from the lockfile with `uv export --no-hashes --no-emit-project -o requirements.txt`; edit `pyproject.toml` and re-export rather than editing it by hand. The exact versions actually used for the published results are also recorded in `dist/results.json`.
+`requirements.txt` is generated from the lockfile with `uv export --no-hashes --no-emit-project -o requirements.txt`; edit `pyproject.toml` and re-export rather than editing it by hand. The exact versions actually used for the published results are also recorded in `app/results.json`.
 
 The [project setup notes](docs/project_setup.md) record how the environment is managed, the commands for changing dependencies, and a known sensitivity in model selection.
 
@@ -137,9 +137,9 @@ This is an intentional first rebuild, not a line-for-line replication:
 | `export_reference.py` | Parameters of the validation-selected prediction model for the browser |
 | `build_guide.py`, `docs/guide-template.docx` | Generate the guide's PDF and Word editions from `docs/BEGINNER_GUIDE.md` |
 | `serve.py` | One-command local dashboard |
-| `dist/index.html`, `styles.css`, `app.mjs` | Interactive browser interface |
-| `dist/inference.mjs` | Exact variable elimination over exported probability tables |
-| `dist/results.json` | Metrics, splits, software versions, cut points, graph, tables, arrow stability, and the reference model |
+| `app/index.html`, `styles.css`, `app.mjs` | Interactive browser interface |
+| `app/inference.mjs` | Exact variable elimination over exported probability tables |
+| `app/results.json` | Metrics, splits, software versions, cut points, graph, tables, arrow stability, and the reference model |
 | `data/winequality-red.csv` | Original attributed dataset |
 | `data/selected-network.bif` | Interoperable trained Bayesian network |
 | `data/holdout-predictions.csv` | Row-level predictions and probabilities |

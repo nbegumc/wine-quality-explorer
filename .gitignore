@@ -6,3 +6,5 @@ __pycache__/
 .pytest_cache/
 /tmp*
 /.wine-training-*/
+.claude/
+.DS_Store

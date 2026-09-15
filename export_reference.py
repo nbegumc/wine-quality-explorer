@@ -3,7 +3,7 @@
 Usage: python export_reference.py
 Refits the model that validation selected overall on the recorded training
 partition, checks that it reproduces the recorded holdout metrics, and adds
-``reference_model`` to dist/results.json. Nothing else in that file changes.
+``reference_model`` to app/results.json. Nothing else in that file changes.
 """
 import json
 import math
@@ -13,7 +13,7 @@ from train import ROOT, export_reference, fit_candidate, load_data, metrics, pre
 
 
 def main():
-    path = ROOT / "dist" / "results.json"
+    path = ROOT / "app" / "results.json"
     results = json.loads(path.read_text(encoding="utf-8"))
     name = results["selection"]["overall"]
     frame = load_data()

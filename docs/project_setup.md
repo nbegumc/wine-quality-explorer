@@ -83,7 +83,7 @@ The cause is not the migration. Those two candidates score 0.259 and 0.264 mean 
 macro-F1 — close enough that a different scipy or BLAS build reorders them. The published results
 were produced under Python 3.12.14; the current lock resolves 3.12.12 with newer transitive builds.
 
-`dist/results.json`, `data/holdout-predictions.csv`, and `data/selected-network.bif` were restored
+`app/results.json`, `data/holdout-predictions.csv`, and `data/selected-network.bif` were restored
 from git, so the published artifacts and the tests that check them are unchanged.
 
 To make the reproducibility claim hold exactly, pin `.python-version` to `3.12.14`, run `uv sync`,

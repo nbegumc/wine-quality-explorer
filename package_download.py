@@ -6,11 +6,11 @@ ROOT = Path(__file__).resolve().parent
 EXCLUDED = {".python-deps", ".git", ".venv", "__pycache__", ".openai", ".sites-runtime", ".pytest_cache"}
 
 if __name__ == "__main__":
-    target = ROOT / "dist/wine-quality-python.zip"
+    target = ROOT / "app/wine-quality-python.zip"
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         entries = ["README.md", "pyproject.toml", "uv.lock", ".python-version", "requirements.txt",
                    "serve.py", "train.py", "bootstrap_structure.py", "export_reference.py", "build_guide.py", "package_download.py",
-                   ".gitignore", "src", "tests", "docs", "data", "original", "dist"]
+                   ".gitignore", "src", "tests", "docs", "data", "original", "app"]
         paths = []
         for entry in entries:
             base = ROOT / entry

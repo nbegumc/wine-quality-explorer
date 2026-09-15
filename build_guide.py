@@ -1,8 +1,8 @@
 """Build the Word and PDF editions of the beginner guide from its Markdown source.
 
 Usage: uv run --with python-docx --with reportlab build_guide.py
-Reads docs/BEGINNER_GUIDE.md and writes dist/wine-quality-learning-guide.docx, using
-the styles stored in docs/guide-template.docx, and dist/wine-quality-learning-guide.pdf.
+Reads docs/BEGINNER_GUIDE.md and writes app/wine-quality-learning-guide.docx, using
+the styles stored in docs/guide-template.docx, and app/wine-quality-learning-guide.pdf.
 The guide's Markdown dialect is small: a title line, headings, paragraphs, bullet and
 numbered lists, pipe tables, figures, and inline bold, code, and links.
 """
@@ -21,8 +21,8 @@ from docx.shared import Emu, Pt, RGBColor, Twips
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "docs" / "BEGINNER_GUIDE.md"
 TEMPLATE = ROOT / "docs" / "guide-template.docx"
-TARGET = ROOT / "dist" / "wine-quality-learning-guide.docx"
-PDF_TARGET = ROOT / "dist" / "wine-quality-learning-guide.pdf"
+TARGET = ROOT / "app" / "wine-quality-learning-guide.docx"
+PDF_TARGET = ROOT / "app" / "wine-quality-learning-guide.pdf"
 TEXT_WIDTH_TWIPS = 9994      # Letter page with the template's margins
 FIGURE_WIDTH = Emu(6345936)  # the same width in EMU
 INLINE = re.compile(r"(\*\*.+?\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))")
