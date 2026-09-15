@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Python and browser-parity tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Exact browser inference matches Python
+        run: node tests/test_inference.mjs
+
+  reproduce:
+    name: Reproduce the recorded experiment in the reference image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t wine-quality-explorer .
+      - name: Tests inside the image
+        run: docker run --rm wine-quality-explorer uv run python -m unittest discover -s tests
+      - name: Rerun training, arrow stability, and the reference export
+        run: >
+          docker run --name experiment wine-quality-explorer
+          sh -c "uv run train.py && uv run bootstrap_structure.py && uv run export_reference.py"
+      - run: docker cp experiment:/project/app/results.json reproduced.json
+      - name: Compare with the committed results
+        run: python tests/compare_results.py app/results.json reproduced.json
+
+  deploy:
+    name: Publish the dashboard to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the source archive the dashboard links to
+        run: python package_download.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+      - id: deployment
+        uses: actions/deploy-pages@v4
