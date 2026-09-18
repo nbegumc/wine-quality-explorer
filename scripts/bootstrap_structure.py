@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from wine_quality.model import FEATURES, WineBN, bootstrap_arc_strength
 
-STABLE, WEAK = 0.85, 0.5  # 0.85 is the threshold the original R project used to keep an arc.
+STABLE, WEAK = 0.85, 0.5  # 0.85 is a common threshold for keeping an arc in bootstrap-averaged networks.
 
 
 def arc_names(network):

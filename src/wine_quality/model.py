@@ -1,8 +1,7 @@
 """Train-only discretization, structure learning, and exact inference.
 
 Numerical cut points are estimated from training predictors only. The quality
-schema is prespecified from the original red-wine project, never inferred from
-held-out labels. All inference conditions on observed predictors, not the target.
+schema (scores 3-8) is prespecified, never inferred from held-out labels. All inference conditions on observed predictors, not the target.
 """
 from dataclasses import dataclass
 from itertools import product
@@ -18,8 +17,9 @@ FEATURES = ["fixed_acidity", "volatile_acidity", "citric_acid", "residual_sugar"
             "pH", "sulphates", "alcohol"]
 CLASSES = np.arange(3, 9)
 STATES = ["low", "medium", "high"]
-# Preserved only as an experimental condition. These are assumptions, not causes.
-ORIGINAL_PRIORS = [("alcohol", "quality"), ("volatile_acidity", "quality"),
+# Seven arcs specified in advance from wine-chemistry intuition and tested as a
+# constraint condition. They are assumptions, not causes.
+PRIOR_ARCS = [("alcohol", "quality"), ("volatile_acidity", "quality"),
                    ("residual_sugar", "density"), ("alcohol", "residual_sugar"),
                    ("sulphates", "quality"), ("pH", "sulphates"),
                    ("total_sulfur_dioxide", "free_sulfur_dioxide")]
@@ -34,7 +34,7 @@ def validate_frame(frame, target=True):
     if not np.isfinite(values).all():
         raise ValueError("All measurements must be finite and non-missing.")
     if target and not frame.quality.isin(CLASSES).all():
-        raise ValueError("This experiment supports the original quality scores 3–8.")
+        raise ValueError("This experiment supports quality scores 3–8.")
 
 
 @dataclass
@@ -112,7 +112,7 @@ class WineBN:
         else:
             learner.useScoreAIC()
         if knowledge:
-            for parent, child in ORIGINAL_PRIORS:
+            for parent, child in PRIOR_ARCS:
                 learner.addMandatoryArc(parent, child)
         # First learn the graph with its stated score, then apply BDeu smoothing
         # only to parameter estimation (equivalent sample size = 5).
@@ -160,7 +160,7 @@ class WineBN:
         return {"features": FEATURES, "classes": CLASSES.tolist(), "states": STATES,
                 "cuts": self.bins.cuts, "factors": factors, "arcs": arcs,
                 "score": self.score, "knowledge": self.knowledge,
-                "forced_arcs": ORIGINAL_PRIORS if self.knowledge else []}
+                "forced_arcs": PRIOR_ARCS if self.knowledge else []}
 
 
 def bootstrap_arc_strength(frame, groups, score="bic", knowledge=False, repeats=1000, seed=123):

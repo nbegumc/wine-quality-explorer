@@ -86,7 +86,7 @@ The same locked dependencies on **arm64** (Apple silicon natively, or an arm64 c
 **not** reproduce the network results. Logistic regression and the random forest match exactly,
 but pyAgrum's greedy hill climbing breaks near-ties differently: `BN · AIC` scores 0.259 instead of
 0.267 mean validation macro-F1, `BN · BIC` 0.247 instead of 0.256, and the selected network flips
-to `BN · BIC + original priors` (0.264). An earlier native run on this Mac showed the same flip and
+to `BN · BIC + prior arcs` (0.264). An earlier native run on this Mac showed the same flip and
 was first attributed to Python patch versions; the architecture is the actual cause, which is why
 `compose.yaml` pins `platform: linux/amd64` (Docker Desktop on Apple silicon emulates it).
 

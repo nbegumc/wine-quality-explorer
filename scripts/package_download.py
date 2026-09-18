@@ -10,7 +10,7 @@ if __name__ == "__main__":
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         entries = ["README.md", "LICENSE", "pyproject.toml", "uv.lock", ".python-version", "requirements.txt",
                    "scripts",
-                   ".gitignore", "src", "tests", "docs", "data", "original", "app"]
+                   ".gitignore", "src", "tests", "docs", "data", "app"]
         paths = []
         for entry in entries:
             base = ROOT / entry

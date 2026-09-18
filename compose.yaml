@@ -1,6 +1,6 @@
 # Both services run as linux/amd64. pyAgrum's structure search breaks near-ties differently on
 # arm64 (Apple silicon, natively or in an arm64 container): the BN · AIC validation score drops
-# from 0.267 to 0.259 and the selected network flips to BN · BIC + original priors. The committed
+# from 0.267 to 0.259 and the selected network flips to BN · BIC + prior arcs. The committed
 # artifacts are reproduced exactly on amd64; on Apple silicon Docker Desktop emulates it.
 services:
   dashboard:

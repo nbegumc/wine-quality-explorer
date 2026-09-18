@@ -4,7 +4,7 @@ A beginner guide to the Python project and interactive explorer
 
 This project asks whether laboratory measurements of a red wine can help predict its sensory quality score. It also asks a more useful question than simply naming a score: how should our uncertainty change when we know some measurements and leave others unknown?
 
-We rebuilt an earlier university project written in R using Python. The rebuild keeps the research question, corrects problems in the evaluation, compares the network with simpler models, and makes both the network's reasoning and the reference model's predictions explorable in a browser. The aim is a project whose reasoning you can explain and whose results someone else can reproduce.
+The project keeps the evaluation honest, compares the network with simpler models, and makes both the network's reasoning and the reference model's predictions explorable in a browser. The aim is a project whose reasoning you can explain and whose results someone else can reproduce.
 
 You need no background in probability or Bayesian networks to use this guide. Start with the counting examples, then follow the actual experiment. By the end, you should be able to explain what the model learns, read its probability bars, describe a fair test, and discuss the project's limitations without relying on technical vocabulary.
 
@@ -84,7 +84,7 @@ You do not need to memorize the names first. The practical reasoning is: start w
 
 ### What the word prior means in this project
 
-The project uses "prior" in several related but different ways. A prior quality distribution describes the model's probabilities before measurements are supplied. The "original priors" model names refer to seven required graph arrows inherited from the R project. A parameter prior supplies small starting counts when estimating probability tables. These are three separate choices, not one interchangeable setting.
+The project uses "prior" in several related but different ways. A prior quality distribution describes the model's probabilities before measurements are supplied. The "prior arcs" model names refer to seven graph arrows specified in advance and forced into the network as a constraint. A parameter prior supplies small starting counts when estimating probability tables. These are three separate choices, not one interchangeable setting.
 
 The explorer's starting distribution is learned from training data. It can therefore differ slightly from counting the full dataset. When you supply a measurement, the explorer calculates a conditional distribution using an already fitted model. It does not relearn the model from your slider movements.
 
@@ -171,7 +171,7 @@ Three states keep the tables smaller, make the model easy to inspect, and let th
 
 A prediction may jump when a slider crosses a boundary. That jump comes from categorization; it is not evidence that wine quality changes abruptly at that chemical value. "High" means high relative to this training distribution, not a universal quality or safety threshold.
 
-The R version used Hartemink discretization, which aims to retain pairwise information between variables while reducing categories. This rebuild uses simpler marginal quantiles, calculated for each feature separately. They are different methods, so the Python results are not an exact numerical replication of the R experiment [3].
+Other discretization methods exist, such as supervised or information-preserving schemes that choose boundaries with the target or the other variables in mind. This project uses marginal quantiles, calculated for each feature separately, because they are transparent, fitted on training rows only, and easy to apply to a new value.
 
 The continuous-input baseline models help test whether the network's simplification costs predictive performance. There is no need to assume that a more understandable representation will always be more accurate.
 
@@ -189,7 +189,7 @@ For datasets of this size, BIC generally imposes a stronger complexity penalty p
 
 Each network has at most three parents per node. With three-state parents, each additional parent triples the number of parent combinations in its child's table. Limiting parents controls table size, computation, and the risk of estimating probabilities from tiny groups.
 
-We compare AIC and BIC both with and without seven required arrows inherited from the R project. Those arrows are assumptions to test. The selected AIC network has no forced arrows. This does not establish that expert knowledge is useless; it describes these particular assumptions in this experiment.
+We compare AIC and BIC both with and without seven prespecified arrows, chosen from wine-chemistry intuition such as alcohol pointing to quality and residual sugar pointing to density. Those arrows are assumptions to test. The selected AIC network has no forced arrows. This does not establish that expert knowledge is useless; it describes these particular assumptions in this experiment.
 
 ### Avoid certainty from small counts
 
@@ -251,8 +251,8 @@ A **calibration plot** groups predictions by their largest probability and compa
 | Random forest | 0.281 | 62.8% | 0.308 |
 | BN with BIC | 0.256 | 54.1% | 0.244 |
 | BN with AIC | 0.267 | 56.6% | 0.277 |
-| BN with BIC and original priors | 0.264 | 54.1% | 0.265 |
-| BN with AIC and original priors | 0.256 | 57.5% | 0.278 |
+| BN with BIC and prior arcs | 0.264 | 54.1% | 0.265 |
+| BN with AIC and prior arcs | 0.256 | 57.5% | 0.278 |
 
 Logistic regression wins the prespecified validation criterion overall. AIC without forced arrows wins among the networks. The forest's higher holdout accuracy does not change those selections: it is a different metric on data reserved for evaluation. Choosing a new winner after seeing this table would change the experiment's decision rule.
 
@@ -315,7 +315,7 @@ In **Compare models**, switch between training cross-validation and the final ho
 
 In **Explore the network**, select quality and read its parents and children. The arrows show the fitted dependency structure. Selecting a node is an explanation tool; it does not alter the model. Use Chapter 4 to explain how measurements can inform quality even when arrows point outward from quality.
 
-The arrows are also drawn by stability. The selected recipe was relearned on 1,000 resamples of the training wines, drawing measurement groups with replacement. Hover over an arrow to read how often it appeared in those graphs and how often it pointed the drawn way. Solid arrows appeared in at least 85% of the resamples, the threshold the original R project used to keep an arrow; dotted arrows appeared in fewer than half. This is a diagnostic of the frozen model. It changes no prediction, and it cannot make an arrow causal.
+The arrows are also drawn by stability. The selected recipe was relearned on 1,000 resamples of the training wines, drawing measurement groups with replacement. Hover over an arrow to read how often it appeared in those graphs and how often it pointed the drawn way. Solid arrows appeared in at least 85% of the resamples, a common threshold for keeping an arrow in a bootstrap-averaged network; dotted arrows appeared in fewer than half. This is a diagnostic of the frozen model. It changes no prediction, and it cannot make an arrow causal.
 
 In **Data and methodology**, compare the class counts and read the experiment sequence. Use this view when explaining the project to someone else: start with the question and the split before discussing the graph's appearance.
 
@@ -335,7 +335,7 @@ The project separates training from exploration. This makes the delivered result
 
 | File or object | Its role in the learning process |
 | --- | --- |
-| `data/winequality-red.csv` | Original observations and target scores |
+| `data/winequality-red.csv` | Source observations and target scores |
 | `QuantileBins` in `src/wine_quality/model.py` | Learns training boundaries and applies them to measurements |
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
 | `scripts/train.py` | Creates the grouped splits, compares models, selects them, and exports results |
@@ -352,17 +352,17 @@ To retrain, use the environment-creation and installation commands in `README.md
 
 The training script overwrites the result exports with its new run. Preserve the current results before experimenting if you want to compare versions. A recorded data checksum helps detect whether the source CSV changed.
 
-Six Python tests passed for split integrity, train-only preprocessing, valid probabilities, saved-model consistency, and selection. Browser inference matched Python on 41 saved queries, including partial evidence and bin boundaries. These checks support implementation consistency. They do not prove predictive validity for other wines. Full browser interaction testing was not performed in the original delivery.
+Six Python tests passed for split integrity, train-only preprocessing, valid probabilities, saved-model consistency, and selection. Browser inference matched Python on 41 saved queries, including partial evidence and bin boundaries. These checks support implementation consistency. They do not prove predictive validity for other wines.
 
-## 15 Explain the improvements and the remaining limits
+## 15 Explain the evaluation choices and the remaining limits
 
-The earlier R project had a worthwhile research question and explored network learning, prior arrows, and uncertain predictions. The language was not the central problem. The strongest improvements concern how the evidence is evaluated and explained.
+The strongest part of this project is not the model; it is how the evidence is evaluated and explained. Three choices carry most of that weight.
 
-The original script discretized the whole dataset and initially learned graphs before splitting training and test rows. Learning those relationships involved future test labels. Fitting probability tables on training rows afterward could not remove that information from the chosen graph. The rebuild splits first and relearns every data-dependent step inside validation.
+The split comes first. Bin boundaries, graph structure, and probability tables are all learned from data, so any of them that sees the holdout rows first would leak future information into the model. The pipeline reserves the holdout from the raw rows and relearns every data-dependent step inside each validation fold.
 
-The original AIC prediction block also used the BIC fitted object. That copy-and-paste error means an AIC label did not guarantee an AIC result. A shared evaluation loop now ties each result to its named model configuration. The detailed R audit is retained in `docs/LEARNING_GUIDE.md`.
+Every candidate runs through one shared evaluation loop and is named once. That ties each score to its configuration and prevents a model's numbers from being reported under another model's label, a mistake that is easy to make when code is copied between experiments.
 
-Other changes are deliberate methodological choices. Quantile bins replace Hartemink; pyAgrum hill climbing replaces the original comparison of Grow-Shrink, hill climbing, and MMHC; exact inference uses all supplied evidence. The original graph bootstrap is reproduced only as the arrow-stability diagnostic in Chapter 13; no averaged network is used for prediction. The holdout-accuracy bootstrap serves a different purpose. New scores therefore should not be advertised as a like-for-like performance improvement over the R numbers.
+Other choices are deliberate simplifications: quantile bins with three levels; greedy hill climbing with AIC or BIC and at most three parents per node; exact inference over all supplied evidence. The bootstrap in Chapter 13 is a stability diagnostic; no averaged network is used for prediction. The holdout-accuracy bootstrap serves a different purpose. `docs/METHODOLOGY.md` states each choice and its cost.
 
 ### What remains unresolved
 
@@ -372,9 +372,9 @@ Rare extreme scores have too few examples for dependable evaluation. Duplicate g
 
 ### Sensible next experiments
 
-Choose one question at a time: does an ordinal model improve score-distance errors; does a faithful Hartemink rebuild change the result; or does keeping only the arrows that proved stable under resampling (Chapter 13) change the predictions? Write the comparison and success metric before running it. Once repeated improvements use this holdout as feedback, it becomes development data; use new independent data or an appropriate nested evaluation for a fresh final estimate.
+Choose one question at a time: does an ordinal model improve score-distance errors; does a supervised discretization change the result; or does keeping only the arrows that proved stable under resampling (Chapter 13) change the predictions? Write the comparison and success metric before running it. Once repeated improvements use this holdout as feedback, it becomes development data; use new independent data or an appropriate nested evaluation for a fresh final estimate.
 
-A credible portfolio can present the original project, explain the audit, document the rebuild, and discuss the evidence honestly. The most useful interview skill is being able to justify a decision and recognize where its conclusion stops.
+A credible portfolio can state the question, document the evaluation, and discuss the evidence honestly, including the disappointing parts. The most useful interview skill is being able to justify a decision and recognize where its conclusion stops.
 
 ## 16 Keep a glossary beside the code
 
@@ -417,12 +417,12 @@ The explanatory examples with 100 wines are invented for teaching. The six-class
 
 1. Cortez, Cerdeira, Almeida, Matos, and Reis. **Wine Quality dataset**, UCI Machine Learning Repository, 2009. DOI 10.24432/C56S3T. Dataset context, variables, attribution, and CC BY 4.0 license. [UCI Wine Quality](https://archive.ics.uci.edu/dataset/186/wine+quality).
 2. Scikit-learn documentation. **Common pitfalls and recommended practices**, especially data leakage and consistent preprocessing. Read this after Chapter 6. [Avoiding data leakage](https://scikit-learn.org/stable/common_pitfalls.html#data-leakage).
-3. bnlearn documentation. **Preprocessing and discretization**. Describes the Hartemink method used by the R project. [bnlearn preprocessing](https://www.bnlearn.com/documentation/man/preprocessing.html).
+3. bnlearn documentation. **Arc strength and model averaging**. The bootstrap arc-strength method behind the stability view in Chapter 13. [bnlearn arc strength](https://www.bnlearn.com/documentation/man/arc.strength.html).
 4. pyAgrum documentation. **Learning Bayesian networks**. API reference for the graph learning and parameter estimation used in Python. Read after Chapters 5 and 8. [pyAgrum learning](https://pyagrum.readthedocs.io/en/latest/BNLearning.html).
-5. bnlearn documentation. **Cross-validation** and **prediction**. Useful when comparing the original R calls with the rebuild's evaluation and inference. [bnlearn cross-validation](https://www.bnlearn.com/documentation/man/bn.cv.html) and [bnlearn prediction](https://www.bnlearn.com/documentation/man/predict.and.impute.html).
+5. Koller and Friedman. **Probabilistic Graphical Models: Principles and Techniques**, MIT Press, 2009. The standard reference for variable elimination, d-separation, and structure learning, for readers who want the theory behind Chapters 4, 5, and 8.
 
 ### A short way to explain the project aloud
 
-"I studied whether laboratory measurements can predict red-wine quality, while showing uncertainty over possible scores. I rebuilt my R study in Python and corrected leakage by learning all preprocessing and model structure within training data. I compared Bayesian networks with simple baselines, selected models through validation, and evaluated the frozen choices on grouped held-out data. Logistic regression performed better on the chosen predictive criterion, so the explorer shows it as the prediction reference, while the network is kept as the reasoning model because it supports queries with missing measurements. Rare quality scores remain difficult for both."
+"I studied whether laboratory measurements can predict red-wine quality, while showing uncertainty over possible scores. I avoided leakage by learning all preprocessing and model structure within training data. I compared Bayesian networks with simple baselines, selected models through validation, and evaluated the frozen choices on grouped held-out data. Logistic regression performed better on the chosen predictive criterion, so the explorer shows it as the prediction reference, while the network is kept as the reasoning model because it supports queries with missing measurements. Rare quality scores remain difficult for both."
 
 Use that explanation only once you can connect each sentence to the code or results. To prepare, explain the 100-wine example without formulas, trace the split before any fitting, and walk someone through the failed prediction in Chapter 12. Those three activities reveal whether you understand the probability, evaluation, and limitations behind the interface.

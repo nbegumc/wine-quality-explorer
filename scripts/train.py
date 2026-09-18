@@ -29,8 +29,8 @@ from wine_quality.model import FEATURES, CLASSES, WineBN, validate_frame
 
 SEED = 123
 CANDIDATES = ["Majority baseline", "Logistic regression", "Random forest",
-              "BN · BIC", "BN · AIC", "BN · BIC + original priors",
-              "BN · AIC + original priors"]
+              "BN · BIC", "BN · AIC", "BN · BIC + prior arcs",
+              "BN · AIC + prior arcs"]
 
 
 def write_json(path, payload):
@@ -48,7 +48,7 @@ def load_data():
 
 def fit_candidate(name, frame):
     if name.startswith("BN"):
-        return WineBN.fit(frame, "aic" if "AIC" in name else "bic", "priors" in name)
+        return WineBN.fit(frame, "aic" if "AIC" in name else "bic", "prior arcs" in name)
     if name == "Majority baseline":
         model = DummyClassifier(strategy="prior")
     elif name == "Logistic regression":

@@ -6,7 +6,7 @@ const units = {alcohol:'% vol',density:'g/cm³',pH:'',free_sulfur_dioxide:'mg/L'
 const steps = {alcohol:0.1,density:0.00001,pH:0.01,free_sulfur_dioxide:0.5,total_sulfur_dioxide:0.5,fixed_acidity:0.1,volatile_acidity:0.005,citric_acid:0.01,residual_sugar:0.05,chlorides:0.001,sulphates:0.01};
 const descriptions = {quality:'The sensory score assigned to the wine. The model predicts a probability for each score from 3 to 8.',alcohol:'Alcohol concentration. The model can associate this measurement with quality and other wine properties.',volatile_acidity:'Volatile acidity measured in the wine. Its association with quality is learned from the training observations.',sulphates:'Measured sulphate concentration. This is distinct from the free and total sulfur dioxide measurements.',pH:'The acidity scale. pH and fixed acidity describe different properties.',density:'Mass per unit volume, associated with the composition of the wine.'};
 const fmt = n => Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
-const STABLE=0.85,WEAK=0.5; // Arrow-stability buckets; 0.85 is the original R project's averaging threshold.
+const STABLE=0.85,WEAK=0.5; // Arrow-stability buckets; 0.85 is a common averaging threshold for bootstrap-learned networks.
 const pct = n => `${(n*100).toFixed(1)}%`;
 let experiment, evidence={}, prior=[], probabilities=[], inspectedModel, currentSample=null, node='quality';
 
@@ -73,7 +73,7 @@ function syncControls() {
     const group=$(`[data-feature="${name}"] .measurement-values`);group.classList.toggle('disabled',!included);
     for(const kind of ['range','value']) {const input=$(`#${kind}-${name}`);input.disabled=!included;if(included)input.value=evidence[name];}
   }
-  $('#sample-note').textContent=currentSample?`Original row ${currentSample.id+1}; actual quality ${currentSample.quality}. This wine was excluded from training.`:'';
+  $('#sample-note').textContent=currentSample?`Dataset row ${currentSample.id+1}; actual quality ${currentSample.quality}. This wine was excluded from training.`:'';
 }
 function updatePrediction() {
   probabilities=query(experiment.network,evidence);syncControls();
@@ -144,7 +144,7 @@ function renderNetwork() {
   $('#absent-pairs').innerHTML=absent.map(p=>`<span>${featureLabel(p.a)} – ${featureLabel(p.b)} · ${pct0(p.strength)}</span>`).join('');
   document.querySelectorAll('.stability-legend').forEach(el=>el.hidden=!stability);
   $('#stability-note').hidden=!stability;
-  if(stability)$('#stability-note').textContent=`Arrow stability: the ${experiment.selection.bn} recipe was relearned on ${stability.repeats.toLocaleString()} resamples of the training wines (measurement groups drawn with replacement). Solid arrows appeared in at least ${pct0(STABLE)} of those graphs, the threshold the original R project used to keep an arrow; dotted arrows appeared in fewer than half. A direction share near 50% in a tooltip means the data does not determine which way the arrow points. This is a diagnostic of the frozen model; predictions are unchanged.`;
+  if(stability)$('#stability-note').textContent=`Arrow stability: the ${experiment.selection.bn} recipe was relearned on ${stability.repeats.toLocaleString()} resamples of the training wines (measurement groups drawn with replacement). Solid arrows appeared in at least ${pct0(STABLE)} of those graphs, a common threshold for keeping an arrow in a bootstrap-averaged network; dotted arrows appeared in fewer than half. A direction share near 50% in a tooltip means the data does not determine which way the arrow points. This is a diagnostic of the frozen model; predictions are unchanged.`;
 }
 function showView(name) {
   if(!['predict','compare','network','study'].includes(name))name='predict';
