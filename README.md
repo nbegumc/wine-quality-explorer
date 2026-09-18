@@ -13,7 +13,7 @@ The two models have different jobs. **Logistic regression is the prediction refe
 You only need Python to explore the already-trained results:
 
 ```bash
-python serve.py
+python scripts/serve.py
 ```
 
 Open **http://localhost:8000**. Keep the terminal open while using the app. Stop it with Ctrl+C. No account, API key, or GitHub connection is required.
@@ -39,21 +39,21 @@ The interface evaluates conditional probabilities from exported Python-trained t
 
 The [beginner learning guide](docs/BEGINNER_GUIDE.md) explains the objective, probability and Bayes' rule using small counting examples, network structure and tables, every experiment step, the actual results, and a real failed prediction. It includes dashboard exercises, a code map, a glossary, and references. No probability background is assumed.
 
-Download the same guide as a [PDF](app/wine-quality-learning-guide.pdf) or an [editable Word document](app/wine-quality-learning-guide.docx). Both are generated from the Markdown by `build_guide.py` and are linked from the dashboard. This is the second edition, written for the explorer that pairs the network with a prediction reference; the first edition is kept as [`docs/BEGINNER_GUIDE_old.md`](docs/BEGINNER_GUIDE_old.md) with its own [PDF](app/wine-quality-learning-guide_old.pdf) and [Word](app/wine-quality-learning-guide_old.docx) files. The shorter [R audit and implementation notes](docs/LEARNING_GUIDE.md) remain available for the specific corrections to the original project.
+Download the same guide as a [PDF](app/wine-quality-learning-guide.pdf) or an [editable Word document](app/wine-quality-learning-guide.docx). Both are generated from the Markdown by `scripts/build_guide.py` and are linked from the dashboard. This is the second edition, written for the explorer that pairs the network with a prediction reference; the first edition is kept as [`docs/BEGINNER_GUIDE_old.md`](docs/BEGINNER_GUIDE_old.md) with its own [PDF](app/wine-quality-learning-guide_old.pdf) and [Word](app/wine-quality-learning-guide_old.docx) files. The shorter [R audit and implementation notes](docs/LEARNING_GUIDE.md) remain available for the specific corrections to the original project.
 
 ## Reproduce the experiment
 
 Use Python 3.11 or newer. The project is managed with [uv](https://docs.astral.sh/uv/), which creates the environment, installs the locked dependencies, and fetches the right Python itself:
 
 ```bash
-uv run train.py
-uv run bootstrap_structure.py
-uv run export_reference.py
+uv run scripts/train.py
+uv run scripts/bootstrap_structure.py
+uv run scripts/export_reference.py
 uv run python -m unittest discover -s tests -v
-uv run serve.py
+uv run scripts/serve.py
 ```
 
-After editing `docs/BEGINNER_GUIDE.md`, regenerate its PDF and Word editions with `uv run --with python-docx --with reportlab build_guide.py`; the two libraries are fetched for that run only and are not project dependencies.
+After editing `docs/BEGINNER_GUIDE.md`, regenerate its PDF and Word editions with `uv run --with python-docx --with reportlab scripts/build_guide.py`; the two libraries are fetched for that run only and are not project dependencies.
 
 To reproduce the published numbers exactly, run the experiment in the reference environment, the pinned `linux/amd64` Docker image:
 
@@ -64,7 +64,7 @@ uv run python tests/compare_results.py app/results.json <(git show HEAD:app/resu
 
 The container rewrites `app/results.json`, `data/selected-network.bif`, and `data/holdout-predictions.csv` in the checkout; the comparison confirms every field matches the committed file (floats within 1e-9). CI performs the same check on every push. A native run on Apple silicon does **not** reproduce the network results: pyAgrum's structure search breaks near-ties differently on arm64 and selects a different network. `docs/project_setup.md` records the finding.
 
-`train.py` runs the experiment. `bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `app/results.json` without changing any other result. `export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
+`scripts/train.py` runs the experiment. `scripts/bootstrap_structure.py` then relearns the selected network's recipe on 1,000 group-bootstrap resamples of the recorded training partition (about half a minute) and adds each arrow's stability to `app/results.json` without changing any other result. `scripts/export_reference.py` refits the validation-selected prediction model on the recorded training partition, checks that it reproduces the recorded holdout metrics, and adds its parameters for the browser. The dashboard works without either step; it then shows no stability information and no reference prediction.
 
 No activation step is needed: each `uv run` syncs `.venv` against `uv.lock` first. Dependencies are declared in `pyproject.toml`; `uv.lock` pins every transitive package for all platforms.
 
@@ -76,11 +76,11 @@ python -m venv .venv
 source .venv/bin/activate        # macOS/Linux
 python -m pip install -r requirements.txt
 python -m pip install -e .
-python train.py
-python bootstrap_structure.py
-python export_reference.py
+python scripts/train.py
+python scripts/bootstrap_structure.py
+python scripts/export_reference.py
 python -m unittest discover -s tests -v
-python serve.py
+python scripts/serve.py
 ```
 
 `requirements.txt` is generated from the lockfile with `uv export --no-hashes --no-emit-project -o requirements.txt`; edit `pyproject.toml` and re-export rather than editing it by hand. The exact versions actually used for the published results are also recorded in `app/results.json`.
@@ -145,7 +145,7 @@ This is an intentional first rebuild, not a line-for-line replication:
 - Maximum indegree is fixed at three; exact inference replaces prediction from parents alone.
 - The AIC/BIC evaluation bug is corrected.
 - Cross-validation repeats the complete learning process.
-- The original's graph bootstrap is reproduced only as a diagnostic: `bootstrap_structure.py` relearns the selected recipe on 1,000 resamples of training measurement groups and records how often each arrow appears and in which direction. The original instead kept arrows found in at least 85% of resamples as its model; no averaged network is used for prediction here. The accuracy interval bootstrap is a different operation and must not be presented as structure averaging.
+- The original's graph bootstrap is reproduced only as a diagnostic: `scripts/bootstrap_structure.py` relearns the selected recipe on 1,000 resamples of training measurement groups and records how often each arrow appears and in which direction. The original instead kept arrows found in at least 85% of resamples as its model; no averaged network is used for prediction here. The accuracy interval bootstrap is a different operation and must not be presented as structure averaging.
 - The original prior edges are a comparison condition only. Their chemical or causal directions are not verified by this project.
 
 ## Project map
@@ -153,11 +153,11 @@ This is an intentional first rebuild, not a line-for-line replication:
 | File | Purpose |
 | --- | --- |
 | `src/wine_quality/model.py` | Binning, network learning, exact inference, and table export |
-| `train.py` | Grouped evaluation, selection, results, and prediction exports |
-| `bootstrap_structure.py` | Arrow stability of the selected network from bootstrap relearning |
-| `export_reference.py` | Parameters of the validation-selected prediction model for the browser |
-| `build_guide.py`, `docs/guide-template.docx` | Generate the guide's PDF and Word editions from `docs/BEGINNER_GUIDE.md` |
-| `serve.py` | One-command local dashboard (`HOST`/`PORT` from the environment) |
+| `scripts/train.py` | Grouped evaluation, selection, results, and prediction exports |
+| `scripts/bootstrap_structure.py` | Arrow stability of the selected network from bootstrap relearning |
+| `scripts/export_reference.py` | Parameters of the validation-selected prediction model for the browser |
+| `scripts/build_guide.py`, `docs/guide-template.docx` | Generate the guide's PDF and Word editions from `docs/BEGINNER_GUIDE.md` |
+| `scripts/serve.py` | One-command local dashboard (`HOST`/`PORT` from the environment) |
 | `Dockerfile`, `compose.yaml` | Pinned amd64 reference environment: `dashboard` and `experiment` services |
 | `.github/workflows/ci.yml` | Tests, browser parity, container reproduction check, Pages deployment |
 | `tests/compare_results.py` | Field-by-field comparison of a regenerated `results.json` with the committed one |

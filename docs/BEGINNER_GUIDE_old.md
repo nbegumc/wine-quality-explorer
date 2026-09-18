@@ -332,16 +332,16 @@ The project separates training from exploration. This makes the delivered result
 | `data/winequality-red.csv` | Original observations and target scores |
 | `QuantileBins` in `src/wine_quality/model.py` | Learns training boundaries and applies them to measurements |
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
-| `train.py` | Creates the grouped splits, compares models, selects them, and exports results |
-| `bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
+| `scripts/train.py` | Creates the grouped splits, compares models, selects them, and exports results |
+| `scripts/bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
 | `app/results.json` | Records scores, row indices, cut points, graph, tables, and software versions |
 | `data/holdout-predictions.csv` | Lets you inspect each held-out prediction and its probabilities |
 | `app/inference.mjs` and `app/app.mjs` | Calculate browser probabilities and update the interface |
 | `tests/` | Checks evaluation boundaries and consistency of the implementation |
 
-To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
+To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python scripts/serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
 
-To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py` followed by `python bootstrap_structure.py` for the arrow stability shown in the network view. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
+To retrain, use the environment-creation and installation commands in `README.md`, then run `python scripts/train.py` followed by `python scripts/bootstrap_structure.py` for the arrow stability shown in the network view. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.14, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1; these are recorded versions, not a claim that each is the latest release.
 
 The training script overwrites the result exports with its new run. Preserve the current results before experimenting if you want to compare versions. A recorded data checksum helps detect whether the source CSV changed.
 

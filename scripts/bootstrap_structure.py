@@ -1,6 +1,6 @@
 """Measure how stable the selected network's arrows are under bootstrap resampling.
 
-Usage: python bootstrap_structure.py [--repeats N]
+Usage: python scripts/bootstrap_structure.py [--repeats N]
 Relearns the selected recipe on resamples of the recorded training partition and
 adds ``network.arc_strength`` to app/results.json. Nothing else in that file,
 the selected model, or the holdout evaluation changes.
@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import pyagrum as gum
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from wine_quality.model import FEATURES, WineBN, bootstrap_arc_strength
 

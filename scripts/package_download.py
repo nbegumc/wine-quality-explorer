@@ -2,14 +2,14 @@
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {".python-deps", ".git", ".venv", "__pycache__", ".openai", ".sites-runtime", ".pytest_cache"}
 
 if __name__ == "__main__":
     target = ROOT / "app/wine-quality-python.zip"
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         entries = ["README.md", "LICENSE", "pyproject.toml", "uv.lock", ".python-version", "requirements.txt",
-                   "serve.py", "train.py", "bootstrap_structure.py", "export_reference.py", "build_guide.py", "package_download.py",
+                   "scripts",
                    ".gitignore", "src", "tests", "docs", "data", "original", "app"]
         paths = []
         for entry in entries:

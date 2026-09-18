@@ -1,6 +1,6 @@
 """Export the validation-selected prediction model for the browser.
 
-Usage: python export_reference.py
+Usage: python scripts/export_reference.py
 Refits the model that validation selected overall on the recorded training
 partition, checks that it reproduces the recorded holdout metrics, and adds
 ``reference_model`` to app/results.json. Nothing else in that file changes.

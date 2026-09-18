@@ -1,6 +1,6 @@
 """Build the Word and PDF editions of the beginner guide from its Markdown source.
 
-Usage: uv run --with python-docx --with reportlab build_guide.py
+Usage: uv run --with python-docx --with reportlab scripts/build_guide.py
 Reads docs/BEGINNER_GUIDE.md and writes app/wine-quality-learning-guide.docx, using
 the styles stored in docs/guide-template.docx, and app/wine-quality-learning-guide.pdf.
 The guide's Markdown dialect is small: a title line, headings, paragraphs, bullet and
@@ -18,7 +18,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Emu, Pt, RGBColor, Twips
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "BEGINNER_GUIDE.md"
 TEMPLATE = ROOT / "docs" / "guide-template.docx"
 TARGET = ROOT / "app" / "wine-quality-learning-guide.docx"

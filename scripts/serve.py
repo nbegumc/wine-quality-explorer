@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 if __name__ == "__main__":
-    root = Path(__file__).resolve().parent / "app"
+    root = Path(__file__).resolve().parents[1] / "app"
     host, port = os.environ.get("HOST", "127.0.0.1"), int(os.environ.get("PORT", "8000"))
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
     server = http.server.ThreadingHTTPServer((host, port), handler)

@@ -18,5 +18,9 @@ services:
     profiles: [experiment]
     volumes:
       - .:/project
+    # The bind mount makes `uv run` reinstall the project; skip recompiling bytecode, which
+    # can stall under Docker Desktop's amd64 emulation.
+    environment:
+      UV_COMPILE_BYTECODE: "0"
     command: >
-      sh -c "uv run train.py && uv run bootstrap_structure.py && uv run export_reference.py"
+      sh -c "uv run scripts/train.py && uv run scripts/bootstrap_structure.py && uv run scripts/export_reference.py"

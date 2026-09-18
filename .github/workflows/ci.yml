@@ -33,7 +33,7 @@ jobs:
       - name: Rerun training, arrow stability, and the reference export
         run: >
           docker run --name experiment wine-quality-explorer
-          sh -c "uv run train.py && uv run bootstrap_structure.py && uv run export_reference.py"
+          sh -c "uv run scripts/train.py && uv run scripts/bootstrap_structure.py && uv run scripts/export_reference.py"
       - run: docker cp experiment:/project/app/results.json reproduced.json
       - name: Compare with the committed results
         run: python tests/compare_results.py app/results.json reproduced.json
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build the source archive the dashboard links to
-        run: python package_download.py
+        run: python scripts/package_download.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

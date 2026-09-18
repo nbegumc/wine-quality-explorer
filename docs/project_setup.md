@@ -47,10 +47,10 @@ could not resolve from PyPI.
 Everyday use, with no activation step:
 
 ```bash
-uv run train.py
+uv run scripts/train.py
 uv run python -m unittest discover -s tests -v
-uv run serve.py
-uv run package_download.py
+uv run scripts/serve.py
+uv run scripts/package_download.py
 ```
 
 Adding or changing a dependency:
@@ -67,7 +67,7 @@ uv export --no-hashes --no-emit-project -o requirements.txt
 uv run python -V                                          # Python 3.12.12
 uv run python -c "import wine_quality; print(wine_quality.__file__)"
 uv run python -m unittest discover -s tests -v            # 6 tests, OK
-uv run package_download.py                                # archive includes the new files
+uv run scripts/package_download.py                                # archive includes the new files
 ```
 
 The import resolves to `src/wine_quality/__init__.py`, confirming the editable install rather than a
@@ -95,7 +95,7 @@ Consequences:
 - The reference environment for every published number is the pinned image
   `ghcr.io/astral-sh/uv:0.9.30-python3.12-bookworm-slim` on amd64 (Python 3.12.12).
 - Regenerate artifacts only with `docker compose run --rm experiment`, then run the tests.
-  A native `uv run train.py` on Apple silicon produces a different, internally consistent
+  A native `uv run scripts/train.py` on Apple silicon produces a different, internally consistent
   experiment; do not commit its outputs without updating the README and guides.
 - The near-tie itself is real: the four network recipes span 0.256–0.267 validation macro-F1
   while the fold-to-fold spread within one recipe is 0.013–0.034. The dashboard's arrow-stability
@@ -103,8 +103,8 @@ Consequences:
 
 ## Migration notes
 
-- `train.py` and `tests/test_model.py` still call `sys.path.insert(0, str(ROOT / "src"))`. This is
+- `scripts/train.py` and `tests/test_model.py` still call `sys.path.insert(0, str(ROOT / "src"))`. This is
   now redundant under uv but harmless, and it keeps the no-install path working.
-- `package_download.py` includes `pyproject.toml`, `uv.lock`, and `.python-version` in the archive so
+- `scripts/package_download.py` includes `pyproject.toml`, `uv.lock`, and `.python-version` in the archive so
   a downloaded copy can be rebuilt with `uv sync`.
 - `.venv/` is already ignored by `.gitignore`.

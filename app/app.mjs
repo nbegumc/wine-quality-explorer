@@ -112,7 +112,7 @@ function renderNetwork() {
   const positions={quality:[525,75],alcohol:[200,235],sulphates:[525,235],volatile_acidity:[850,235],residual_sugar:[175,425],density:[525,425],citric_acid:[875,425],chlorides:[175,615],pH:[410,615],fixed_acidity:[650,615],total_sulfur_dioxide:[890,615],free_sulfur_dioxide:[850,735]};
   const neighbours=new Set([node,...network.arcs.filter(([a,b])=>a===node||b===node).flat()]);
   const force=new Set(network.forced_arcs.map(a=>a.join('|')));
-  // Bootstrap arc strength is optional: a bare train.py run exports no arc_strength block.
+  // Bootstrap arc strength is optional: a bare scripts/train.py run exports no arc_strength block.
   const stability=network.arc_strength,strengths=new Map((stability?.pairs??[]).map(p=>[`${p.a}|${p.b}`,p]));
   const strengthOf=(a,b)=>{if(!stability)return null;const p=strengths.get([a,b].sort().join('|'));return p?{strength:p.strength,agree:a<b?p.direction:1-p.direction}:{strength:0,agree:0};};
   const bucket=s=>s>=STABLE?'stable':s>=WEAK?'moderate':'weak',pct0=n=>`${Math.round(n*100)}%`;
@@ -183,7 +183,7 @@ async function start() {
     $('#group-description').textContent=`${experiment.dataset.duplicate_rows} repeated rows are retained, but all identical predictor rows stay in the same group. ${experiment.dataset.unique_predictor_groups} unique measurement groups.`;
     $('#split-description').textContent=`${experiment.split.train_rows} training rows and ${experiment.split.test_rows} holdout rows, using the first stratified group fold with seed ${experiment.split.seed}.`;
     registerAgentTools();showView(location.hash.slice(1));
-  } catch(error) {$('#load-error').hidden=false;$('#load-error').textContent=`Unable to load the explorer: ${error.message} If running locally, start it with python serve.py rather than opening the HTML file directly.`;$('#dataset-summary').textContent='Results unavailable';}
+  } catch(error) {$('#load-error').hidden=false;$('#load-error').textContent=`Unable to load the explorer: ${error.message} If running locally, start it with python scripts/serve.py rather than opening the HTML file directly.`;$('#dataset-summary').textContent='Results unavailable';}
 }
 document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.view)));
 window.addEventListener('hashchange',()=>showView(location.hash.slice(1)));

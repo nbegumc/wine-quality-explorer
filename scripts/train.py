@@ -1,6 +1,6 @@
 """Run the prespecified experiment and export the interactive dashboard data.
 
-Usage: python train.py
+Usage: python scripts/train.py
 No test score is used to tune a model, choose a seed, or select a discretizer.
 """
 import hashlib
@@ -23,7 +23,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from wine_quality.model import FEATURES, CLASSES, WineBN, validate_frame
 

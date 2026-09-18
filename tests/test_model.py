@@ -76,7 +76,7 @@ class ModelTests(unittest.TestCase):
     def test_reference_model_reproduces_logistic_regression(self):
         reference = self.results.get("reference_model")
         if reference is None:
-            self.skipTest("results.json has no reference_model block; run export_reference.py")
+            self.skipTest("results.json has no reference_model block; run scripts/export_reference.py")
         from sklearn.linear_model import LogisticRegression
         from sklearn.pipeline import make_pipeline
         from sklearn.preprocessing import StandardScaler
@@ -117,7 +117,7 @@ class ModelTests(unittest.TestCase):
     def test_exported_arc_strength_matches_selected_recipe(self):
         strength = self.results["network"].get("arc_strength")
         if strength is None:
-            self.skipTest("results.json has no arc_strength block; run bootstrap_structure.py")
+            self.skipTest("results.json has no arc_strength block; run scripts/bootstrap_structure.py")
         self.assertGreater(strength["repeats"], 0)
         self.assertEqual(strength["recipe"], {"score": self.results["network"]["score"],
                                               "knowledge": self.results["network"]["knowledge"]})

@@ -8,3 +8,4 @@ __pycache__/
 /.wine-training-*/
 .claude/
 .DS_Store
+app/wine-quality-python.zip

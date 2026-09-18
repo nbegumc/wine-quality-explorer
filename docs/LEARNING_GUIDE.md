@@ -8,7 +8,7 @@ In `original/red_wine_final.R`, discretization starts at line 17 and initial gra
 
 Think of the test set as an exam. Choosing which relationships to learn after looking at exam answers gives the model information that a new wine will not provide.
 
-The Python pipeline splits raw observations first. In every validation fold, it estimates fresh bin boundaries, graph structure, and conditional probabilities. See `WineBN.fit` and the validation loop in `train.py`.
+The Python pipeline splits raw observations first. In every validation fold, it estimates fresh bin boundaries, graph structure, and conditional probabilities. See `WineBN.fit` and the validation loop in `scripts/train.py`.
 
 ## 2. A fixed graph and a learned graph answer different validation questions
 
@@ -66,7 +66,7 @@ The three-category bins also discard information. Continuous-input baseline mode
 5. Read the AIC/BIC model comparison. Explain why the overall chosen model is logistic regression even though the dashboard centers the Bayesian network.
 6. Run the tests and inspect the exported split indices and probability tables.
 
-Bootstrap graph stability is now available as a diagnostic (`bootstrap_structure.py`; see the network view). For a future experiment, define changes before evaluating a new holdout. Options include Hartemink parity, ordinal models, an averaged network as a candidate model, or justified alternative priors. Repeatedly improving a model against the current test scores would gradually turn this holdout into validation data.
+Bootstrap graph stability is now available as a diagnostic (`scripts/bootstrap_structure.py`; see the network view). For a future experiment, define changes before evaluating a new holdout. Options include Hartemink parity, ordinal models, an averaged network as a candidate model, or justified alternative priors. Repeatedly improving a model against the current test scores would gradually turn this holdout into validation data.
 
 ## References
 

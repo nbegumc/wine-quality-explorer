@@ -338,17 +338,17 @@ The project separates training from exploration. This makes the delivered result
 | `data/winequality-red.csv` | Original observations and target scores |
 | `QuantileBins` in `src/wine_quality/model.py` | Learns training boundaries and applies them to measurements |
 | `WineBN` in the same file | Learns the graph and tables, then answers probability queries |
-| `train.py` | Creates the grouped splits, compares models, selects them, and exports results |
-| `bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
-| `export_reference.py` | Exports the validation-selected prediction model so the browser can show it beside the network |
+| `scripts/train.py` | Creates the grouped splits, compares models, selects them, and exports results |
+| `scripts/bootstrap_structure.py` | Relearns the selected recipe on resamples and records each arrow's stability |
+| `scripts/export_reference.py` | Exports the validation-selected prediction model so the browser can show it beside the network |
 | `app/results.json` | Records scores, row indices, cut points, graph, tables, arrow stability, the reference model, and software versions |
 | `data/holdout-predictions.csv` | Lets you inspect each held-out prediction and its probabilities |
 | `app/inference.mjs` and `app/app.mjs` | Calculate browser probabilities and update the interface |
 | `tests/` | Checks evaluation boundaries and consistency of the implementation |
 
-To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
+To explore the existing results, extract the project ZIP and open a terminal in its folder. Run `python scripts/serve.py`, then open `http://localhost:8000`. Keep that terminal open while using the app. Stop the server with Ctrl+C. On systems where Python is named `python3`, use that command instead.
 
-To retrain, use the environment-creation and installation commands in `README.md`, then run `python train.py` followed by `python bootstrap_structure.py` for the arrow stability shown in the network view and `python export_reference.py` for the prediction reference. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.12, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1 inside the project's Docker image; these are recorded versions, not a claim that each is the latest release. The network results depend on the processor architecture, so `docker compose run --rm experiment` is the way to reproduce them exactly.
+To retrain, use the environment-creation and installation commands in `README.md`, then run `python scripts/train.py` followed by `python scripts/bootstrap_structure.py` for the arrow stability shown in the network view and `python scripts/export_reference.py` for the prediction reference. A virtual environment is a separate set of Python packages for this project. `requirements.txt` pins the direct modelling libraries. The saved run used Python 3.12.12, pandas 2.2.3, NumPy 2.3.5, scikit-learn 1.8.0, and pyAgrum 3.1.1 inside the project's Docker image; these are recorded versions, not a claim that each is the latest release. The network results depend on the processor architecture, so `docker compose run --rm experiment` is the way to reproduce them exactly.
 
 The training script overwrites the result exports with its new run. Preserve the current results before experimenting if you want to compare versions. A recorded data checksum helps detect whether the source CSV changed.
 
@@ -409,7 +409,7 @@ A credible portfolio can present the original project, explain the audit, docume
 
 ## 17 Find the evidence and read further
 
-The numerical source for this guide is the recorded Python experiment in `app/results.json`. The Word edition of this guide is generated from its Markdown source by `build_guide.py`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
+The numerical source for this guide is the recorded Python experiment in `app/results.json`. The Word edition of this guide is generated from its Markdown source by `scripts/build_guide.py`. You can inspect row-level outputs in `data/holdout-predictions.csv` and the fitted network in `data/selected-network.bif`. The BIF file is a standard text representation of a Bayesian network; it preserves variables, graph structure, and probability tables for other compatible tools.
 
 The explanatory examples with 100 wines are invented for teaching. The six-class result table and source-row-459 example are actual project outputs. The guide's figures show a teaching graph and the experiment's sequence, not a causal model of wine production.
 
